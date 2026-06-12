@@ -1,16 +1,21 @@
 import uuid
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.clients import AlmacenClient, CatalogClient, FacturacionClient, PagosClient
+from app.config import settings
 from app.database import get_db
 from app.models import Agencia, EstadoVenta, Venta, VentaItem
 from app.schemas import VentaCreate, VentaOut
 
 router = APIRouter(prefix="/ventas", tags=["ventas"])
+
+
+def _redondear(monto: Decimal) -> Decimal:
+    return monto.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 @router.post("", response_model=VentaOut, status_code=status.HTTP_201_CREATED)
@@ -65,13 +70,19 @@ async def crear_venta(payload: VentaCreate, db: AsyncSession = Depends(get_db)) 
         await _compensar_salidas(salidas_aplicadas)
         raise
 
+    # IVA y total finales. Debe coincidir con lo que facturacion calcula
+    # internamente, porque vamos a cobrar este total via Pagos.
+    subtotal_redondeado = _redondear(subtotal_total)
+    iva = _redondear(subtotal_redondeado * Decimal(str(settings.iva_rate)))
+    total_con_iva = subtotal_redondeado + iva
+
     # 3. Crear la Venta localmente (estado pendiente).
     venta = Venta(
         agencia_id=payload.agencia_id,
         cliente_nombre=payload.cliente_nombre,
         cliente_documento=payload.cliente_documento,
-        subtotal=subtotal_total,
-        total=subtotal_total,  # sin IVA al nivel de venta — la factura lo agrega
+        subtotal=subtotal_redondeado,
+        total=total_con_iva,
         estado=EstadoVenta.pendiente,
         items=[
             VentaItem(
@@ -88,12 +99,12 @@ async def crear_venta(payload: VentaCreate, db: AsyncSession = Depends(get_db)) 
     await db.commit()
     await db.refresh(venta)
 
-    # 4. Pagos.
+    # 4. Pagos — cobramos el total con IVA.
     try:
         pago = await PagosClient.crear_pago({
             "tipo": "venta",
             "referencia_id": str(venta.id),
-            "monto": str(subtotal_total),
+            "monto": str(total_con_iva),
             "metodo": payload.metodo_pago,
         })
     except HTTPException:
@@ -119,8 +130,8 @@ async def crear_venta(payload: VentaCreate, db: AsyncSession = Depends(get_db)) 
                 }
                 for i in items_resueltos
             ],
-            "subtotal": str(subtotal_total),
-            "total": str(subtotal_total),  # facturación recalcula total con IVA
+            "subtotal": str(subtotal_redondeado),
+            "total": str(total_con_iva),
         })
     except HTTPException:
         await _compensar_salidas(salidas_aplicadas)

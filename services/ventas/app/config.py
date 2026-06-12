@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     # Timeout (segundos) para llamadas HTTP a otros servicios
     http_timeout: float = 5.0
 
+    # IVA aplicado a las ventas. Debe coincidir con el de facturacion.
+    # Si cambia uno, cambian ambos.
+    iva_rate: float = 0.13
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
