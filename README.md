@@ -23,18 +23,69 @@ Siete microservicios independientes (BD propia cada uno), un gateway Nginx que r
 | gateway     | 8000        | —                  |
 | frontend    | 3000        | —                  |
 
-## Quick start
+## Quick start (estado esqueleto)
+
+> ⚠️ **El proyecto está en estado ESQUELETO.** Todo levanta, pero la lógica
+> de los endpoints todavía no está implementada — devuelven `501 No implementado`.
+> Ese es el punto de partida desde donde cada uno implementa SU servicio.
+
+### 1. Pre-requisitos
+
+- Docker Desktop instalado y corriendo (Windows/Mac) o Docker Engine + Compose v2 (Linux).
+- Git.
+- Puertos libres en localhost: `3000`, `8000`, `8001`–`8007`, `54321`–`54327`.
+
+### 2. Clonar y levantar
 
 ```bash
+git clone <url-del-repo>
+cd tienda-abuela
 cp .env.example .env
-# Editar .env si vas a tocar Stripe (sk_test_..., whsec_...)
 docker compose up --build
 ```
 
-Verificar:
-- `http://localhost:8000/catalog/health` → 200
-- `http://localhost:3000` → frontend
-- `http://localhost:8001/docs` → Swagger del servicio catalog (idem 8002..8007)
+La primera vez tarda ~3 minutos (descarga imágenes + compila los 7 servicios).
+Cuando todo está listo verás algo como `Application startup complete` por cada servicio.
+
+Para correr en segundo plano: `docker compose up --build -d`
+Para ver el estado: `docker compose ps` (todos deberían estar `running (healthy)`)
+Para apagar: `docker compose down` (agregar `-v` para borrar también las BDs).
+
+### 3. Qué deberías ver funcionando en este estado esqueleto
+
+✅ **Sí funciona ahora mismo:**
+
+| Comprobación                                                       | Esperado                                            |
+| ------------------------------------------------------------------ | --------------------------------------------------- |
+| `curl http://localhost:8000/health`                                | `{"status":"ok","service":"gateway"}`               |
+| `curl http://localhost:8000/catalog/health`                        | `{"status":"ok","service":"catalog"}`               |
+| `curl http://localhost:8000/almacen/health`                        | `{"status":"ok","service":"almacen"}`               |
+| `curl http://localhost:8000/ventas/health`                         | `{"status":"ok","service":"ventas"}`                |
+| `curl http://localhost:8000/compras/health`                        | `{"status":"ok","service":"compras"}`               |
+| `curl http://localhost:8000/pagos/health`                          | `{"status":"ok","service":"pagos"}`                 |
+| `curl http://localhost:8000/facturacion/health`                    | `{"status":"ok","service":"facturacion"}`           |
+| `curl http://localhost:8000/rrhh/health`                           | `{"status":"ok","service":"rrhh"}`                  |
+| Abrir <http://localhost:3000>                                      | Frontend con header, 5 tabs y dropdown de agencias  |
+| Abrir <http://localhost:8001/docs> (idem 8002..8007)               | Swagger con todos los endpoints listados            |
+| En cualquier servicio con agencias (almacen, ventas, compras, facturacion, rrhh), ver los logs: | "Servicio X listo" tras crear 6 agencias en seed   |
+
+❌ **NO funciona aún** (lo va a implementar cada owner):
+
+- `POST /catalog/products`, `GET /catalog/products`, etc. → devuelven `501 No implementado`.
+- `POST /ventas/ventas`, `POST /compras/ordenes-compra`, etc. → `501`.
+- Los tabs del frontend muestran un mensaje `TODO(owner-frontend)`.
+- Stripe no funciona (las llaves en `.env.example` son placeholders).
+
+Esto es **esperado** — significa que el esqueleto está bien.
+
+### 4. Próximo paso
+
+Cada persona toma su servicio según [docs/asignacion-equipo.md](docs/asignacion-equipo.md)
+y empieza a implementar la lógica en su `routes.py`. Los contratos en `schemas.py`
+y los endpoints en `routes.py` ya están — solo hay que rellenar el cuerpo.
+
+Ver [docs/quick-start.md](docs/quick-start.md) para tips de cómo iterar rápido
+en un solo servicio sin levantar todo.
 
 ## Estado actual de la base
 
