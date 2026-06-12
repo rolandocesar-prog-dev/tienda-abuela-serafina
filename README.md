@@ -117,6 +117,31 @@ Ver [docs/asignacion-equipo.md](docs/asignacion-equipo.md) para quién toma qué
 - [docs/architecture.md](docs/architecture.md) — diagrama y decisiones.
 - [docs/asignacion-equipo.md](docs/asignacion-equipo.md) — quién hace qué.
 
+## Configurar Stripe (modo test)
+
+Los pagos en efectivo y transferencia funcionan sin ninguna configuración.
+Para habilitar pagos con tarjeta:
+
+1. Crea una cuenta en https://dashboard.stripe.com (gratis, modo test).
+2. En **Developers → API keys** copia tu *Secret key* (empieza con `sk_test_`).
+3. En **Developers → Webhooks** crea un endpoint apuntando a
+   `http://<host-publico>/pagos/pagos/stripe/webhook` con los eventos
+   `payment_intent.succeeded` y `payment_intent.payment_failed`. Copia
+   el *Signing secret* (empieza con `whsec_`).
+4. Edita `.env` y reemplaza:
+   ```
+   STRIPE_SECRET_KEY=sk_test_TU_LLAVE_REAL
+   STRIPE_WEBHOOK_SECRET=whsec_TU_WEBHOOK_SECRET
+   ```
+5. Reinicia el servicio: `docker compose up -d --force-recreate pagos`.
+
+Sin llaves configuradas, los pagos con tarjeta devuelven **503** y el flujo
+de venta se compensa correctamente. Para probar en local sin webhook público,
+usa la [Stripe CLI](https://stripe.com/docs/stripe-cli):
+`stripe listen --forward-to http://localhost:8005/pagos/stripe/webhook`.
+
+Tarjeta de prueba: `4242 4242 4242 4242`, cualquier CVV, fecha futura.
+
 ## Restricciones del proyecto (no negociables)
 
 - Sin autenticación, sin login, sin roles.
