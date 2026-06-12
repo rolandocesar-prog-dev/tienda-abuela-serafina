@@ -1,62 +1,90 @@
-// Cliente JS mínimo para Tienda Abuela Serafina.
-// Todas las llamadas pasan por el gateway en :8000.
+// Contenedor principal donde se cargan los módulos
+const appContainer = document.getElementById("app-container");
 
-const GATEWAY = "http://localhost:8000";
+// Referencias para evitar duplicar CSS y JS
+let currentScript = null;
+let currentCss = null;
 
-// Datos compartidos con los servicios (mismos UUIDs del seed)
-const AGENCIAS = [
-    { id: "660e8400-e29b-41d4-a716-446655440001", nombre: "Agencia Centro La Paz",  codigo: "A001" },
-    { id: "660e8400-e29b-41d4-a716-446655440002", nombre: "Agencia Sopocachi",      codigo: "A002" },
-    { id: "660e8400-e29b-41d4-a716-446655440003", nombre: "Agencia Equipetrol",     codigo: "A003" },
-    { id: "660e8400-e29b-41d4-a716-446655440004", nombre: "Agencia Norte",          codigo: "A004" },
-    { id: "660e8400-e29b-41d4-a716-446655440005", nombre: "Agencia Centro Cocha",   codigo: "A005" },
-    { id: "660e8400-e29b-41d4-a716-446655440006", nombre: "Agencia Sur",            codigo: "A006" },
-];
+/**
+ * Carga dinámicamente un módulo:
+ * - HTML
+ * - CSS
+ * - JS
+ */
+async function cargarModulo(nombre) {
+    try {
 
-// Helper genérico para llamar al gateway
-async function api(path, options = {}) {
-    const resp = await fetch(`${GATEWAY}${path}`, {
-        headers: { "Content-Type": "application/json" },
-        ...options,
-    });
-    if (!resp.ok) {
-        const text = await resp.text();
-        throw new Error(`${resp.status} ${resp.statusText}: ${text}`);
+        // 1. Cargar HTML
+        const htmlResponse = await fetch(
+            `modules/${nombre}/${nombre}.html`
+        );
+
+        if (!htmlResponse.ok) {
+            throw new Error(`No se encontró ${nombre}.html`);
+        }
+
+        appContainer.innerHTML = await htmlResponse.text();
+
+        // 2. Cargar CSS
+        if (currentCss) {
+            currentCss.remove();
+        }
+
+        currentCss = document.createElement("link");
+        currentCss.rel = "stylesheet";
+        currentCss.href = `modules/${nombre}/${nombre}.css`;
+
+        document.head.appendChild(currentCss);
+
+        // 3. Cargar JS
+        if (currentScript) {
+            currentScript.remove();
+        }
+
+        currentScript = document.createElement("script");
+        currentScript.src = `modules/${nombre}/${nombre}.js`;
+
+        currentScript.onload = () => {
+
+            const initFunction =
+                `init${nombre.charAt(0).toUpperCase()}${nombre.slice(1)}`;
+
+            if (typeof window[initFunction] === "function") {
+                window[initFunction]();
+            }
+        };
+
+        document.body.appendChild(currentScript);
+
+    } catch (error) {
+
+        console.error(error);
+
+        appContainer.innerHTML = `
+            <div class="alert alert-danger">
+                Error cargando módulo: ${nombre}
+            </div>
+        `;
     }
-    return resp.status === 204 ? null : resp.json();
 }
 
-// ------- Inicialización -------
-function poblarAgencias() {
-    const sel = document.getElementById("agencia");
-    AGENCIAS.forEach(a => {
-        const opt = document.createElement("option");
-        opt.value = a.id;
-        opt.textContent = `${a.codigo} — ${a.nombre}`;
-        sel.appendChild(opt);
+/**
+ * Navegación entre pestañas
+ */
+document.querySelectorAll(".tab-btn").forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+        document
+            .querySelectorAll(".tab-btn")
+            .forEach(b => b.classList.remove("active"));
+
+        btn.classList.add("active");
+
+        cargarModulo(btn.dataset.tab);
     });
-}
 
-function activarTabs() {
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-            btn.classList.add("active");
-            document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
-        });
-    });
-}
-
-// TODO(owner-frontend): cada función abajo es un stub para que el dueño del
-// frontend la implemente — llamando a `api("/<servicio>/<path>")`.
-async function cargarProductos()  { /* GET /catalog/products */ }
-async function procesarVenta()    { /* POST /ventas/ventas */ }
-async function crearOrdenCompra() { /* POST /compras/ordenes-compra */ }
-async function cargarEmpleados()  { /* GET /rrhh/empleados?agencia_id=... */ }
-async function cargarReportes()   { /* GET /almacen/stock + /ventas/ventas */ }
-
-document.addEventListener("DOMContentLoaded", () => {
-    poblarAgencias();
-    activarTabs();
 });
+
+// Módulo inicial
+cargarModulo("catalog");

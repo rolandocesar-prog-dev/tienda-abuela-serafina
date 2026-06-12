@@ -4,52 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tienda Abuela Serafina</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <h1>Tienda de la Abuela Serafina</h1>
-        <div class="agencia-selector">
-            <label for="agencia">Agencia activa:</label>
-            <select id="agencia"></select>
-        </div>
-    </header>
 
-    <nav>
-        <button class="tab-btn active" data-tab="productos">Productos</button>
-        <button class="tab-btn" data-tab="venta">Nueva venta</button>
-        <button class="tab-btn" data-tab="compra">Nueva compra</button>
-        <button class="tab-btn" data-tab="empleados">Empleados</button>
-        <button class="tab-btn" data-tab="reportes">Reportes</button>
+    <nav class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="bi bi-shop"></i> Abuela Serafina
+            </a>
+            <div class="d-flex align-items-center">
+                <select id="agencia" class="form-select form-select-sm"></select>
+            </div>
+        </div>
     </nav>
 
-    <main>
-        <section id="tab-productos" class="tab active">
-            <h2>Productos</h2>
-            <p class="placeholder">TODO(owner-frontend): listar productos del catálogo.</p>
-        </section>
+    <nav class="bg-light border-bottom p-2">
+        <div class="container-fluid">
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary btn-sm tab-btn active" data-tab="catalog">Productos</button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="ventas">Ventas</button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="compras">Compras</button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="empleados">Empleados</button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="reportes">Reportes</button>
+            </div>
+        </div>
+    </nav>
 
-        <section id="tab-venta" class="tab">
-            <h2>Nueva venta</h2>
-            <p class="placeholder">TODO(owner-frontend): formulario de items + cliente + procesar.</p>
-        </section>
+    <main id="app-container" class="container-fluid py-4"></main>
 
-        <section id="tab-compra" class="tab">
-            <h2>Nueva compra</h2>
-            <p class="placeholder">TODO(owner-frontend): proveedor + items + crear orden + recepcionar.</p>
-        </section>
-
-        <section id="tab-empleados" class="tab">
-            <h2>Empleados</h2>
-            <p class="placeholder">TODO(owner-frontend): CRUD empleados filtrable por agencia.</p>
-        </section>
-
-        <section id="tab-reportes" class="tab">
-            <h2>Reportes</h2>
-            <p class="placeholder">TODO(owner-frontend): ventas por agencia, stock actual.</p>
-        </section>
-    </main>
-
+    <script src="modules/api/api.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
