@@ -2,13 +2,17 @@
 
 Estos UUIDs son IDENTICOS en todos los servicios que manejan agencia_id.
 Si cambias uno, hay que cambiarlo en TODOS los servicios. Coordinen.
+
+Facturación además inicializa un ContadorFactura por agencia (ultimo=0)
+para que el SELECT FOR UPDATE de la numeración correlativa siempre
+encuentre la fila que tiene que bloquear.
 """
 import uuid
 
 from sqlalchemy import select
 
 from app.database import AsyncSessionLocal
-from app.models import Agencia
+from app.models import Agencia, ContadorFactura
 
 SUCURSALES = [
     {"id": "550e8400-e29b-41d4-a716-446655440001", "nombre": "Sucursal La Paz",     "ciudad": "La Paz"},
@@ -27,16 +31,18 @@ AGENCIAS = [
 
 
 async def seed_data() -> None:
-    """Inserta agencias si la tabla está vacía. Idempotente."""
+    """Inserta agencias y contadores de factura si la tabla está vacía. Idempotente."""
     async with AsyncSessionLocal() as session:
         existentes = (await session.execute(select(Agencia.id))).scalars().all()
         if existentes:
             return
         for a in AGENCIAS:
+            agencia_id = uuid.UUID(a["id"])
             session.add(Agencia(
-                id=uuid.UUID(a["id"]),
+                id=agencia_id,
                 sucursal_id=uuid.UUID(a["sucursal_id"]),
                 nombre=a["nombre"],
                 codigo=a["codigo"],
             ))
+            session.add(ContadorFactura(agencia_id=agencia_id, ultimo=0))
         await session.commit()
