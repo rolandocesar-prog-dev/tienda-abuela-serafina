@@ -87,28 +87,49 @@ y los endpoints en `routes.py` ya están — solo hay que rellenar el cuerpo.
 Ver [docs/quick-start.md](docs/quick-start.md) para tips de cómo iterar rápido
 en un solo servicio sin levantar todo.
 
-## Estado actual de la base
+## Estado actual
 
-Lo que **YA está hecho** (esqueleto compartido, no tocar sin coordinar):
+> ⚠️ **Dos ramas con propósitos distintos:**
+> - **`main`** → mantiene el **esqueleto original** para análisis del equipo.
+>   Los `routes.py` devuelven 501 hasta que se implementen.
+> - **`rolando-dev`** → **implementación funcional completa**. Los 7 servicios
+>   responden CRUD real, la venta orquesta E2E, Stripe funciona, frontend con
+>   5 tabs. **Esto es lo que se demuestra y se evalúa**.
 
-- Estructura de carpetas completa para los 7 servicios.
-- `docker-compose.yml` con 7 servicios + 7 Postgres + gateway + frontend.
-- `gateway/nginx.conf` con ruteo por prefijo.
-- Por cada servicio: `Dockerfile`, `requirements.txt`, `app/main.py`, `app/config.py`,
-  `app/database.py`, `app/seed.py`, `app/models.py` (con la tabla de la entidad),
-  `app/schemas.py` (con los **contratos del API ya definidos**), y `app/routes.py`
-  (con las firmas de los endpoints — devuelven 501 hasta que se implementen).
-- `app/clients.py` para Ventas y Compras (orquestadores) con los helpers HTTP listos.
-- Frontend con tabs y dropdown de agencias funcionando.
+### Lo que está **funcionando** en `rolando-dev`
 
-Lo que **falta** (asignado por servicio):
+Backend:
+- ✅ **Catalog** — CRUD productos con 409 si código duplicado.
+- ✅ **Almacen** — stock + movimientos atómicos con `SELECT FOR UPDATE`. Rechaza salidas que dejarían stock negativo.
+- ✅ **Pagos** — efectivo/transferencia (estado=completado directo) + **Stripe PaymentIntents reales** (estado=pendiente → completado vía webhook).
+- ✅ **Facturación** — numeración correlativa por agencia (`A001-00000001`, ...) atómica, IVA 13% server-side.
+- ✅ **RRHH** — CRUD empleados, soft delete, filtros por agencia y sucursal.
+- ✅ **Compras** — CRUD proveedores/órdenes + **recepción orquestada** (Almacen + Pagos) con compensación si algo falla.
+- ✅ **Ventas** — **flujo E2E completo**: Catalog → Almacen → Pagos → Facturación. Si Pagos o Facturación fallan, compensa stock y marca venta cancelada.
 
-- Implementar la lógica interna de cada endpoint (los `# TODO(owner-XXX)` en routes.py).
-- Integrar Stripe en pagos (SDK ya en requirements.txt).
-- Implementar las llamadas reales en `frontend/app.js`.
-- Integración E2E (`POST /ventas` y `/ordenes-compra/{id}/recepcion`).
+Frontend (5 tabs en vanilla JS):
+- ✅ Productos: grid con crear/eliminar.
+- ✅ Nueva venta: carrito, datos de cliente, método de pago, resultado con número de factura.
+- ✅ Nueva compra: alta de proveedor inline, carrito, crear orden, recepcionar pendientes.
+- ✅ Empleados: tabla con filtro por agencia, alta/baja.
+- ✅ Reportes: stock + ventas recientes de la agencia activa.
 
-Ver [docs/asignacion-equipo.md](docs/asignacion-equipo.md) para quién toma qué.
+Stripe:
+- ✅ Creación real de PaymentIntents (visibles en `dashboard.stripe.com/test/payments`).
+- ✅ Webhook con validación de firma (`stripe.Webhook.construct_event`).
+- ✅ Estados: pendiente → completado/fallido vía evento real de Stripe.
+- ✅ IVA consistente entre Ventas, Pagos y Facturación (los 3 montos coinciden).
+
+Ver [docs/demo-guide.md](docs/demo-guide.md) para el playbook completo paso a paso.
+
+### Lo que falta / es libre para tomar
+
+- Tests automatizados (pytest + httpx).
+- Frontend con Stripe Elements (confirmar tarjeta sin usar Stripe CLI).
+- Migraciones con Alembic.
+- Logging estructurado y dashboard de KPIs.
+
+Ver [docs/asignacion-equipo.md](docs/asignacion-equipo.md) para distribución sugerida.
 
 ## Documentación
 

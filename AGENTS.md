@@ -194,27 +194,31 @@ Servicios que poblan agencias en el lifespan: `almacen`, `ventas`, `compras`, `f
 
 ## Workflow para esta rama (rolando-dev)
 
-Esta rama es mi rama de trabajo. La rama `main` queda intacta como esqueleto para
-que el equipo la analice. Aquí voy implementando los entregables en este orden:
+Esta rama es la implementación funcional. La rama `main` queda intacta como
+esqueleto para que el equipo la analice. Estado actual de los entregables:
 
 1. ✅ Esqueleto (en `main`)
-2. ⬜ Catalog — CRUD productos
-3. ⬜ Almacen — stock + movimientos
-4. ⬜ Pagos — registro + Stripe
-5. ⬜ Facturación — numeración correlativa
-6. ⬜ RRHH — CRUD empleados
-7. ⬜ Compras — CRUD + recepción
-8. ⬜ Ventas — orquestación E2E
-9. ⬜ Frontend mínimo
+2. ✅ Catalog — CRUD productos
+3. ✅ Almacen — stock + movimientos atómicos
+4. ✅ Pagos — efectivo + Stripe PaymentIntents + webhook validado
+5. ✅ Facturación — numeración correlativa por agencia (A001-00000001...)
+6. ✅ RRHH — CRUD empleados con soft delete y filtros por sucursal
+7. ✅ Compras — CRUD + recepción orquestada con compensación
+8. ✅ Ventas — orquestación E2E Catalog→Almacen→Pagos→Facturación
+9. ✅ Frontend con 5 tabs en vanilla JS
+10. ✅ Stripe integrado con `stripe listen` para webhooks en local
 
-Después de cada servicio: `/code-review` para detectar bugs y `/simplify` para limpiar.
+Verificado E2E: una venta con tarjeta crea un PaymentIntent real en Stripe,
+y al confirmarlo con `stripe payment_intents confirm pi_... --payment-method=pm_card_visa`
+llega el webhook a `pagos` y el `Pago` pasa de `pendiente` a `completado` automáticamente.
 
 ---
 
 ## Referencia rápida
 
 - `README.md` — quick start y estado para compañeros.
+- `docs/demo-guide.md` — **playbook completo para correr y demostrar**.
 - `docs/api-contracts.md` — contratos HTTP (FUENTE DE VERDAD).
 - `docs/architecture.md` — diagrama y decisiones.
-- `docs/asignacion-equipo.md` — quién hace qué.
+- `docs/asignacion-equipo.md` — quién hizo qué y qué queda libre para tomar.
 - `docs/quick-start.md` — cómo iterar en un servicio.
