@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda Abuela Serafina</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Tienda de la Abuela Serafina</h1>
+        <div class="agencia-selector">
+            <label for="agencia">Agencia activa:</label>
+            <select id="agencia"></select>
+        </div>
+    </header>
+
+    <nav>
+        <button class="tab-btn active" data-tab="productos">Productos</button>
+        <button class="tab-btn" data-tab="venta">Nueva venta</button>
+        <button class="tab-btn" data-tab="compra">Nueva compra</button>
+        <button class="tab-btn" data-tab="empleados">Empleados</button>
+        <button class="tab-btn" data-tab="reportes">Reportes</button>
+    </nav>
+
+    <main>
+        <section id="tab-productos" class="tab active">
+            <h2>Productos</h2>
+            <p class="placeholder">TODO(owner-frontend): listar productos del catálogo.</p>
+        </section>
+
+        <section id="tab-venta" class="tab">
+            <h2>Nueva venta</h2>
+            <p class="placeholder">TODO(owner-frontend): formulario de items + cliente + procesar.</p>
+        </section>
+
+        <section id="tab-compra" class="tab">
+            <h2>Nueva compra</h2>
+            <p class="placeholder">TODO(owner-frontend): proveedor + items + crear orden + recepcionar.</p>
+        </section>
+
+        <section id="tab-empleados" class="tab">
+            <h2>Empleados</h2>
+            <p class="placeholder">TODO(owner-frontend): CRUD empleados filtrable por agencia.</p>
+        </section>
+
+        <section id="tab-reportes" class="tab">
+            <h2>Reportes</h2>
+            <p class="placeholder">TODO(owner-frontend): ventas por agencia, stock actual.</p>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
