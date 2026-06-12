@@ -64,7 +64,10 @@ async def crear_pago(payload: PagoCreate, db: AsyncSession = Depends(get_db)) ->
                     "tipo": payload.tipo.value,
                     "referencia_id": str(payload.referencia_id),
                 },
-                automatic_payment_methods={"enabled": True},
+                # allow_redirects=never -> solo acepta metodos sin redireccion
+                # (tarjeta). Permite confirmar el intent desde el backend sin
+                # necesitar un return_url, suficiente para nuestra demo.
+                automatic_payment_methods={"enabled": True, "allow_redirects": "never"},
             )
         except stripe.StripeError as e:
             logger.warning("Stripe rechazo el PaymentIntent: %s", e)
