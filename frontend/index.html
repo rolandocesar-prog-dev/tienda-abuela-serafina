@@ -24,31 +24,163 @@
     </nav>
 
     <main>
+        <!-- PRODUCTOS -->
         <section id="tab-productos" class="tab active">
-            <h2>Productos</h2>
-            <p class="placeholder">TODO(owner-frontend): listar productos del catálogo.</p>
+            <div class="section-head">
+                <h2>Productos</h2>
+                <button class="btn-primary" id="btn-nuevo-producto">+ Nuevo producto</button>
+            </div>
+            <div id="productos-lista" class="grid"></div>
+
+            <dialog id="dialog-producto">
+                <form id="form-producto">
+                    <h3>Nuevo producto</h3>
+                    <label>Código <input name="codigo" required></label>
+                    <label>Nombre <input name="nombre" required></label>
+                    <label>Categoría <input name="categoria" required></label>
+                    <label>Unidad <input name="unidad_medida" value="unidad" required></label>
+                    <label>Precio base <input name="precio_base" type="number" step="0.01" min="0" required></label>
+                    <label>Descripción <textarea name="descripcion" rows="2"></textarea></label>
+                    <div class="form-actions">
+                        <button type="button" data-close>Cancelar</button>
+                        <button type="submit" class="btn-primary">Crear</button>
+                    </div>
+                </form>
+            </dialog>
         </section>
 
+        <!-- NUEVA VENTA -->
         <section id="tab-venta" class="tab">
             <h2>Nueva venta</h2>
-            <p class="placeholder">TODO(owner-frontend): formulario de items + cliente + procesar.</p>
+            <div class="two-col">
+                <div>
+                    <h3>Items</h3>
+                    <div class="row">
+                        <select id="venta-producto" class="grow"></select>
+                        <input id="venta-cantidad" type="number" min="1" value="1" style="width:80px">
+                        <button class="btn-primary" id="venta-agregar">Agregar</button>
+                    </div>
+                    <table id="venta-items">
+                        <thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th><th></th></tr></thead>
+                        <tbody></tbody>
+                        <tfoot><tr><td colspan="3" style="text-align:right"><b>Total:</b></td><td id="venta-total">0.00</td><td></td></tr></tfoot>
+                    </table>
+                </div>
+                <div>
+                    <h3>Cliente y pago</h3>
+                    <label>Nombre cliente <input id="venta-cliente-nombre" placeholder="Opcional"></label>
+                    <label>Documento <input id="venta-cliente-doc" placeholder="Opcional"></label>
+                    <label>Método de pago
+                        <select id="venta-metodo">
+                            <option value="efectivo">Efectivo</option>
+                            <option value="transferencia">Transferencia</option>
+                            <option value="tarjeta">Tarjeta (Stripe)</option>
+                        </select>
+                    </label>
+                    <button class="btn-primary big" id="venta-procesar">Procesar venta</button>
+                    <div id="venta-resultado" class="resultado"></div>
+                </div>
+            </div>
         </section>
 
+        <!-- NUEVA COMPRA -->
         <section id="tab-compra" class="tab">
-            <h2>Nueva compra</h2>
-            <p class="placeholder">TODO(owner-frontend): proveedor + items + crear orden + recepcionar.</p>
+            <h2>Compras</h2>
+            <div class="two-col">
+                <div>
+                    <h3>Nueva orden</h3>
+                    <label>Proveedor
+                        <div class="row">
+                            <select id="compra-proveedor" class="grow"></select>
+                            <button id="btn-nuevo-proveedor">+ Nuevo</button>
+                        </div>
+                    </label>
+                    <div class="row">
+                        <select id="compra-producto" class="grow"></select>
+                        <input id="compra-cantidad" type="number" min="1" value="1" style="width:80px">
+                        <input id="compra-precio" type="number" min="0" step="0.01" placeholder="Precio U." style="width:100px">
+                        <button class="btn-primary" id="compra-agregar">Agregar</button>
+                    </div>
+                    <table id="compra-items">
+                        <thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th><th></th></tr></thead>
+                        <tbody></tbody>
+                        <tfoot><tr><td colspan="3" style="text-align:right"><b>Total:</b></td><td id="compra-total">0.00</td><td></td></tr></tfoot>
+                    </table>
+                    <button class="btn-primary big" id="compra-crear">Crear orden</button>
+                </div>
+                <div>
+                    <h3>Órdenes pendientes</h3>
+                    <div id="ordenes-pendientes" class="lista"></div>
+                </div>
+            </div>
+
+            <dialog id="dialog-proveedor">
+                <form id="form-proveedor">
+                    <h3>Nuevo proveedor</h3>
+                    <label>Nombre <input name="nombre" required></label>
+                    <label>NIT <input name="nit" required></label>
+                    <label>Teléfono <input name="telefono"></label>
+                    <label>Email <input name="email" type="email"></label>
+                    <div class="form-actions">
+                        <button type="button" data-close>Cancelar</button>
+                        <button type="submit" class="btn-primary">Crear</button>
+                    </div>
+                </form>
+            </dialog>
         </section>
 
+        <!-- EMPLEADOS -->
         <section id="tab-empleados" class="tab">
-            <h2>Empleados</h2>
-            <p class="placeholder">TODO(owner-frontend): CRUD empleados filtrable por agencia.</p>
+            <div class="section-head">
+                <h2>Empleados</h2>
+                <button class="btn-primary" id="btn-nuevo-empleado">+ Nuevo empleado</button>
+            </div>
+            <label>Filtrar por agencia
+                <select id="empleados-filtro">
+                    <option value="">Todas</option>
+                </select>
+            </label>
+            <table id="empleados-tabla">
+                <thead><tr><th>Apellido, Nombre</th><th>CI</th><th>Cargo</th><th>Salario</th><th>Agencia</th><th>Estado</th><th></th></tr></thead>
+                <tbody></tbody>
+            </table>
+
+            <dialog id="dialog-empleado">
+                <form id="form-empleado">
+                    <h3>Nuevo empleado</h3>
+                    <label>Nombre <input name="nombre" required></label>
+                    <label>Apellido <input name="apellido" required></label>
+                    <label>CI <input name="ci" required></label>
+                    <label>Cargo <input name="cargo" required></label>
+                    <label>Fecha ingreso <input name="fecha_ingreso" type="date" required></label>
+                    <label>Salario <input name="salario" type="number" step="0.01" min="0" required></label>
+                    <label>Agencia <select name="agencia_id" required></select></label>
+                    <div class="form-actions">
+                        <button type="button" data-close>Cancelar</button>
+                        <button type="submit" class="btn-primary">Crear</button>
+                    </div>
+                </form>
+            </dialog>
         </section>
 
+        <!-- REPORTES -->
         <section id="tab-reportes" class="tab">
-            <h2>Reportes</h2>
-            <p class="placeholder">TODO(owner-frontend): ventas por agencia, stock actual.</p>
+            <h2>Reportes (de la agencia activa)</h2>
+            <button id="btn-refrescar-reportes">Refrescar</button>
+            <div class="two-col">
+                <div>
+                    <h3>Stock actual</h3>
+                    <div id="reporte-stock" class="lista"></div>
+                </div>
+                <div>
+                    <h3>Ventas recientes</h3>
+                    <div id="reporte-ventas" class="lista"></div>
+                </div>
+            </div>
         </section>
     </main>
+
+    <div id="toast"></div>
 
     <script src="app.js"></script>
 </body>
