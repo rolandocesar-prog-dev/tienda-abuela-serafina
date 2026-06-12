@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models import EstadoOrden
 
@@ -12,7 +12,7 @@ class ProveedorBase(BaseModel):
     nombre: str
     nit: str
     telefono: str | None = None
-    email: EmailStr | None = None
+    email: str | None = None
 
 
 class ProveedorCreate(ProveedorBase):
