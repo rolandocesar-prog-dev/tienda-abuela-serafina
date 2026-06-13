@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas import VentaCreate, VentaOut
 
-router = APIRouter(prefix="/ventas", tags=["ventas"])
+router = APIRouter(prefix="", tags=["ventas"])
 
 
 # TODO(owner-ventas): este servicio orquesta el flujo E2E.
