@@ -8,9 +8,9 @@ from app.database import get_db
 from app.models import Producto
 from app.schemas import ProductoCreate, ProductoOut, ProductoUpdate
 
-router = APIRouter(prefix="/products", tags=["productos"])
+router = APIRouter(prefix="", tags=["productos"])
 
-@router.post("", response_model=ProductoOut, status_code=status.HTTP_201_CREATED)
+@router.post("/products", response_model=ProductoOut, status_code=status.HTTP_201_CREATED)
 async def crear_producto(payload: ProductoCreate, db: AsyncSession = Depends(get_db)) -> ProductoOut:
     try:
         nuevo_producto = Producto(**payload.model_dump())
@@ -22,7 +22,7 @@ async def crear_producto(payload: ProductoCreate, db: AsyncSession = Depends(get
         await db.rollback()
         raise HTTPException(status_code=400, detail="Ya existe un producto con este código.")
 
-@router.get("", response_model=list[ProductoOut])
+@router.get("/products", response_model=list[ProductoOut])
 async def listar_productos(categoria: str | None = None, db: AsyncSession = Depends(get_db)) -> list[ProductoOut]:
     stmt = select(Producto)
     if categoria:
@@ -30,14 +30,14 @@ async def listar_productos(categoria: str | None = None, db: AsyncSession = Depe
     resultado = await db.execute(stmt)
     return list(resultado.scalars().all())
 
-@router.get("/{producto_id}", response_model=ProductoOut)
+@router.get("/products/{producto_id}", response_model=ProductoOut)
 async def obtener_producto(producto_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> ProductoOut:
     producto = await db.get(Producto, producto_id)
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return producto
 
-@router.put("/{producto_id}", response_model=ProductoOut)
+@router.put("/products/{producto_id}", response_model=ProductoOut)
 async def actualizar_producto(producto_id: uuid.UUID, payload: ProductoUpdate, db: AsyncSession = Depends(get_db)) -> ProductoOut:
     producto = await db.get(Producto, producto_id)
     if not producto:
@@ -53,7 +53,7 @@ async def actualizar_producto(producto_id: uuid.UUID, payload: ProductoUpdate, d
         await db.rollback()
         raise HTTPException(status_code=400, detail="Error de integridad en los datos.")
 
-@router.delete("/{producto_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/products/{producto_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def eliminar_producto(producto_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> None:
     producto = await db.get(Producto, producto_id)
     if not producto:

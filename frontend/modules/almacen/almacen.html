@@ -1,0 +1,24 @@
+<div class="module-container">
+    <h2>Control de Inventario (Almacén)</h2>
+    
+    <div class="card p-3 mb-4">
+        <h5>Registrar Movimiento</h5>
+        <form id="form-movimiento" class="row g-3">
+            <div class="col-md-2">
+                <select id="tipo" class="form-select" required>
+                    <option value="entrada">Entrada</option>
+                    <option value="salida">Salida</option>
+                </select>
+            </div>
+            <div class="col-md-3"><input type="text" id="agencia_id" class="form-control" placeholder="ID Agencia (UUID)" required></div>
+            <div class="col-md-3"><input type="text" id="producto_id" class="form-control" placeholder="ID Producto (UUID)" required></div>
+            <div class="col-md-2"><input type="number" id="cantidad" class="form-control" placeholder="Cant." required></div>
+            <div class="col-md-2"><button type="submit" class="btn btn-success w-100">Guardar</button></div>
+        </form>
+    </div>
+
+    <table class="table table-striped">
+        <thead><tr><th>Producto ID</th><th>Agencia ID</th><th>Cantidad</th></tr></thead>
+        <tbody id="almacen-body"></tbody>
+    </table>
+</div>

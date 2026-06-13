@@ -1,0 +1,77 @@
+/* 1. Estilos Generales para el módulo */
+#tab-productos {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 2. Tarjetas (Cards) */
+.card {
+    border: none !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
+    background: #ffffff;
+}
+
+/* 3. Tabla Moderna */
+.table thead {
+    background-color: #2d3436;
+    color: #dfe6e9;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.table tbody tr:hover {
+    background-color: #f1f2f6;
+    transition: background 0.2s ease;
+}
+
+.table td, .table th {
+    padding: 1rem !important;
+    vertical-align: middle;
+}
+
+/* 4. Botones */
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary { background-color: #636e72; border: none; }
+.btn-primary { background-color: #0984e3; border: none; }
+.btn-success { background-color: #00b894; border: none; }
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* 5. Inputs y Formularios */
+.form-control {
+    border-radius: 10px;
+    border: 1px solid #dfe6e9;
+    padding: 0.6rem 1rem;
+}
+
+.form-control:focus {
+    border-color: #0984e3;
+    box-shadow: 0 0 0 3px rgba(9, 132, 227, 0.1);
+}
+
+#container-form-nuevo {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 6. Utilidades */
+.text-uppercase { text-transform: uppercase; }
+.fw-bold { font-weight: 700; }
