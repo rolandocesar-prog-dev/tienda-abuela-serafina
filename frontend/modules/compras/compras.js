@@ -1,6 +1,6 @@
-let productosCompra = [];
-let proveedoresCompra = [];
-let draftItems = [];
+window.productosCompra = window.productosCompra || [];
+window.proveedoresCompra = window.proveedoresCompra || [];
+window.draftItems = window.draftItems || [];
 
 // --- CONTROLADOR MANUAL DE PESTAÑAS ---
 window.cambiarPestana = (tabId, btn) => {
@@ -20,39 +20,72 @@ window.cambiarPestana = (tabId, btn) => {
 window.initCompras = async () => {
     console.log("Iniciando módulo de Compras...");
     await Promise.all([
-        cargarProveedores(),
-        cargarProductosCatalog(),
-        cargarOrdenes()
+        window.cargarProveedores(),
+        window.cargarProductosCatalog(),
+        window.cargarOrdenes()
     ]);
 };
 
 // --- CARGA DE DATOS INICIALES ---
 window.cargarProveedores = async () => {
     try {
-        proveedoresCompra = await window.api('/compras/proveedores');
-        const tbody = document.getElementById('tbody-proveedores');
-        const select = document.getElementById('select-proveedor');
-        
-        if(!tbody || !select) return; // Prevención de errores si la vista no cargó bien
+
+        window.proveedoresCompra =
+            await window.api('/compras/proveedores');
+
+        console.log(
+            'Proveedores recibidos:',
+            window.proveedoresCompra
+        );
+
+        const tbody =
+            document.getElementById('tbody-proveedores');
+
+        const select =
+            document.getElementById('select-proveedor');
+
+        console.log('tbody:', tbody);
+        console.log('select:', select);
+
+        if (!tbody || !select) return;
 
         tbody.innerHTML = '';
-        select.innerHTML = '<option value="">Seleccione un proveedor...</option>';
+        select.innerHTML =
+            '<option value="">Seleccione un proveedor...</option>';
 
-        proveedoresCompra.forEach(p => {
-            tbody.innerHTML += `<tr><td>${p.nombre}</td><td>${p.nit}</td><td>${p.telefono || '-'} / ${p.email || '-'}</td></tr>`;
-            select.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
+        window.proveedoresCompra.forEach(p => {
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${p.nombre}</td>
+                    <td>${p.nit}</td>
+                    <td>${p.telefono || '-'} / ${p.email || '-'}</td>
+                </tr>
+            `;
+
+            select.innerHTML += `
+                <option value="${p.id}">
+                    ${p.nombre}
+                </option>
+            `;
         });
-    } catch (error) { console.error("Error cargando proveedores:", error); }
+
+    } catch (error) {
+        console.error(
+            "Error cargando proveedores:",
+            error
+        );
+    }
 };
 
 window.cargarProductosCatalog = async () => {
     try {
-        productosCompra = await window.api('/catalog/productos');
+        window.productosCompra = await window.api('/catalog/productos');
         const select = document.getElementById('select-producto');
         if(!select) return;
 
         select.innerHTML = '<option value="">Seleccione un producto...</option>';
-        productosCompra.forEach(p => {
+        window.productosCompra.forEach(p => {
             select.innerHTML += `<option value="${p.id}" data-nombre="${p.nombre}">${p.nombre}</option>`;
         });
     } catch (error) { console.error("Error cargando productos de catálogo:", error); }
@@ -68,7 +101,10 @@ window.crearProveedor = async (e) => {
         email: document.getElementById('prov-email').value
     };
     try {
-        await window.api('/compras/proveedores', 'POST', payload);
+        await window.api('/compras/proveedores', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
         alert('Proveedor creado exitosamente');
         document.getElementById('form-proveedor').reset();
         await cargarProveedores();
@@ -86,7 +122,7 @@ window.agregarItem = (e) => {
 
     if (!idProd) return alert("Seleccione un producto");
 
-    draftItems.push({
+    window.draftItems.push({
         producto_id: idProd,
         nombre: nombreProd,
         cantidad: cant,
@@ -94,7 +130,7 @@ window.agregarItem = (e) => {
         subtotal: cant * costo
     });
 
-    renderDraft();
+    window.renderDraft();
     document.getElementById('form-add-item').reset();
 };
 
@@ -105,7 +141,7 @@ window.renderDraft = () => {
     tbody.innerHTML = '';
     let total = 0;
 
-    draftItems.forEach((item, index) => {
+    window.draftItems.forEach((item, index) => {
         total += item.subtotal;
         tbody.innerHTML += `
             <tr>
@@ -121,30 +157,33 @@ window.renderDraft = () => {
 };
 
 window.quitarItem = (index) => {
-    draftItems.splice(index, 1);
-    renderDraft();
+    window.draftItems.splice(index, 1);
+    window.renderDraft();
 };
 
 window.crearOrdenCompra = async () => {
     const proveedor_id = document.getElementById('select-proveedor').value;
     const agencia_destino_id = document.getElementById('input-agencia').value;
 
-    if (!proveedor_id || draftItems.length === 0) {
+    if (!proveedor_id || window.draftItems.length === 0) {
         return alert("Seleccione un proveedor y agregue al menos un producto.");
     }
 
     const payload = {
         proveedor_id: proveedor_id,
         agencia_destino_id: agencia_destino_id,
-        items: draftItems.map(i => ({ producto_id: i.producto_id, cantidad: i.cantidad, precio_unitario: i.precio_unitario }))
+        items: window.draftItems.map(i => ({ producto_id: i.producto_id, cantidad: i.cantidad, precio_unitario: i.precio_unitario }))
     };
 
     try {
-        await window.api('/compras/ordenes-compra', 'POST', payload);
+        await window.api('/compras/ordenes-compra', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
         alert('Orden de compra emitida correctamente (Estado: Pendiente)');
-        draftItems = [];
-        renderDraft();
-        await cargarOrdenes();
+        window.draftItems = [];
+        window.renderDraft();
+        await window.cargarOrdenes();
         
         // Cambiar a la pestaña de historial usando nuestra nueva función
         window.cambiarPestana('tab-historial', document.getElementById('btn-tab-historial'));
@@ -191,9 +230,15 @@ window.recepcionarOrden = async (ordenId) => {
     if (!confirm("¿Confirmar recepción?\n\nEsto hará que:\n1. Se sumen los productos a tu ALMACÉN.\n2. Se registre la deuda en PAGOS.")) return;
 
     try {
-        await window.api(`/compras/ordenes-compra/${ordenId}/recepcion`, 'POST', {});
+        await window.api(
+            `/compras/ordenes-compra/${ordenId}/recepcion`,
+            {
+                method: 'POST',
+                body: JSON.stringify({})
+            }
+        );
         alert("¡Recepción exitosa!\nEl stock ha sido actualizado y la deuda se envió a tesorería.");
-        await cargarOrdenes();
+        await window.cargarOrdenes();
     } catch (error) { 
         alert("Error en la orquestación: " + error.message); 
     }
