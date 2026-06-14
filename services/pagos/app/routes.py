@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.database import get_db
-from app.models import Pago, CuentaPorPagar, CuentaPorCobrar, EstadoCuenta, EstadoPago, MetodoPago
+from app.models import Pago, CuentaPorPagar, CuentaPorCobrar, EstadoCuenta, EstadoPago, MetodoPago, TipoPago
 from app.schemas import (
     AbonoCuenta,
     CuentaCobrarCreate,
@@ -59,6 +59,27 @@ async def crear_pago(payload: PagoCreate, db: AsyncSession = Depends(get_db)):
         nuevo_pago.estado = EstadoPago.completado
 
     db.add(nuevo_pago)
+
+    # ACTUALIZAR CUENTA POR PAGAR
+    if payload.tipo == TipoPago.compra:
+
+        stmt = select(CuentaPorPagar).where(
+            CuentaPorPagar.orden_compra_id == payload.referencia_id
+        )
+
+        result = await db.execute(stmt)
+
+        cuenta = result.scalars().first()
+
+        if cuenta:
+
+            cuenta.monto_pagado += payload.monto
+
+            if cuenta.monto_pagado >= cuenta.monto_total:
+
+                cuenta.monto_pagado = cuenta.monto_total
+                cuenta.estado = EstadoCuenta.pagada
+
     await db.commit()
     await db.refresh(nuevo_pago)
     

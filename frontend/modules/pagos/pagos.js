@@ -3,7 +3,8 @@ window.initPagos = async () => {
     // Carga las dos tablas automáticamente al abrir la vista
     await Promise.all([
         cargarCuentasCobrar(),
-        cargarCuentasPagar()
+        cargarCuentasPagar(),
+        cargarPagosRealizados()
     ]);
 };
 
@@ -52,7 +53,7 @@ window.cargarCuentasPagar = async () => {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center py-3">Cargando...</td></tr>';
 
     try {
-        const cuentas = await window.api('/pagos/cuentas-por-pagar');
+        const cuentas = await window.api('/pagos/cuentas-por-pagar?estado=pendiente');
         tbody.innerHTML = '';
 
         if (cuentas.length === 0) {
@@ -100,7 +101,9 @@ window.prepararPago = (tipo, referenciaId, montoPendiente) => {
 // --- PROCESAMIENTO ---
 window.procesarPago = async (event) => {
     event.preventDefault();
+
     const btn = document.getElementById('btn-procesar');
+
     btn.disabled = true;
     btn.innerHTML = 'Procesando...';
 
@@ -112,19 +115,83 @@ window.procesarPago = async (event) => {
     };
 
     try {
-        const respuesta = await window.api('/pagos/pagos', 'POST', payload);
-        alert(`✅ Pago registrado con éxito. Estado: ${respuesta.estado.toUpperCase()}`);
+
+        const respuesta = await window.api(
+            '/pagos/pagos',
+            {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            }
+        );
+
+        alert(
+            `✅ Pago registrado con éxito. Estado: ${respuesta.estado.toUpperCase()}`
+        );
 
         document.getElementById('form-pago').reset();
-        
-        // Refrescar ambas tablas para ver los saldos actualizados
+
         await cargarCuentasCobrar();
         await cargarCuentasPagar();
+        await cargarPagosRealizados();
 
     } catch (error) {
-        alert(`❌ Error al procesar el pago: ${error.message}`);
+
+        alert(
+            `❌ Error al procesar el pago: ${error.message}`
+        );
+
     } finally {
+
         btn.disabled = false;
         btn.innerText = 'Procesar Pago';
+
+    }
+};
+
+window.cargarPagosRealizados = async () => {
+
+    const tbody =
+        document.getElementById(
+            'tbody-pagos-realizados'
+        );
+
+    if (!tbody) return;
+
+    try {
+
+        const cuentas = await window.api(
+            '/pagos/cuentas-por-pagar?estado=pagada'
+        );
+
+        tbody.innerHTML = '';
+
+        if (cuentas.length === 0) {
+            tbody.innerHTML =
+                '<tr><td colspan="5" class="text-center text-success py-3">🎉 No existen cuentas pendientes.</td></tr>';
+            return;
+        }
+
+        cuentas.forEach(c => {
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${c.proveedor_id}</td>
+                    <td>Bs ${parseFloat(c.monto_total).toFixed(2)}</td>
+                    <td>Bs ${parseFloat(c.monto_pagado).toFixed(2)}</td>
+                    <td>
+                        <span class="badge bg-success">
+                            PAGADA
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+
+    } catch (error) {
+
+        console.error(
+            'Error cargando historial:',
+            error
+        );
     }
 };
