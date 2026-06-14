@@ -14,6 +14,7 @@ router = APIRouter(prefix="", tags=["ventas"])
 CATALOG_URL = "http://catalog:8000"
 ALMACEN_URL = "http://almacen:8000"
 FACTURACION_URL = "http://facturacion:8000"  # Agregado
+PAGOS_URL = "http://pagos:8000"  # Nueva variable agregada para la caja
 
 @router.post("/", response_model=VentaOut, status_code=status.HTTP_201_CREATED)
 async def crear_venta(payload: VentaCreate, db: AsyncSession = Depends(get_db)) -> VentaOut:
@@ -63,7 +64,22 @@ async def crear_venta(payload: VentaCreate, db: AsyncSession = Depends(get_db)) 
         await db.commit()
         await db.refresh(nueva_venta)
 
-        # --- NUEVA INTEGRACIÓN: FACTURACIÓN ---
+        # --- NUEVA INTEGRACIÓN: PAGOS (Cuenta por Cobrar) ---
+        # Enviamos los datos para que el módulo de caja registre la deuda pendiente del cliente
+        pago_payload = {
+            "cliente_nombre": nueva_venta.cliente_nombre or "Consumidor Final",
+            "venta_id": str(nueva_venta.id),
+            "monto_total": float(nueva_venta.total)
+        }
+        
+        pago_res = await client.post(f"{PAGOS_URL}/cuentas-por-cobrar", json=pago_payload)
+        if pago_res.status_code != 201:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Venta procesada, pero falló el registro en deudas de Pagos: {pago_res.text}"
+            )
+
+        # --- INTEGRACIÓN: FACTURACIÓN ---
         # 4. Enviar los datos al microservicio de Facturación
         factura_payload = {
             "venta_id": str(nueva_venta.id),
