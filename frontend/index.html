@@ -3,40 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tienda Abuela Serafina</title>
+    <title>Tienda Abuela Serafina - Sistema de Gestión</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="styles.css">
+    <!-- SweetAlert2 para notificaciones -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Font Awesome para iconos adicionales -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <nav class="navbar navbar-dark bg-dark shadow-sm">
+    <!-- Barra superior mejorada -->
+    <nav class="navbar navbar-dark bg-gradient shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#">
-                <i class="bi bi-shop"></i> Abuela Serafina
+            <a class="navbar-brand fw-bold fs-4" href="#">
+                <i class="bi bi-shop me-2"></i>Abuela Serafina
             </a>
-            <div class="d-flex align-items-center">
-                <select id="agencia" class="form-select form-select-sm"></select>
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-white-50 small">
+                    <i class="bi bi-calendar3"></i> <span id="fecha-actual"></span>
+                </div>
+                <select id="agencia" class="form-select form-select-sm bg-light border-0" style="width: auto;">
+                    <option value="">Cargando agencias...</option>
+                </select>
+                <button class="btn btn-outline-light btn-sm" id="btn-refresh">
+                    <i class="bi bi-arrow-repeat"></i>
+                </button>
             </div>
         </div>
     </nav>
 
-    <nav class="bg-light border-bottom p-2">
+    <!-- Navegación mejorada con badges -->
+    <nav class="bg-light border-bottom shadow-sm">
         <div class="container-fluid">
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm tab-btn active" data-tab="catalog">Productos</button>
-                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="ventas">Ventas</button>
-                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="compras">Compras</button>
-                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="almacen">Almacén</button>
-                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="rrhh">Empleados</button>
-                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="facturacion">Facturación</button>
-                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="pagos">Pagos</button>
+            <div class="d-flex flex-wrap gap-1">
+                <button class="btn btn-outline-secondary btn-sm tab-btn active" data-tab="catalog">
+                    <i class="bi bi-grid-3x3-gap-fill me-1"></i>Productos
+                </button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="ventas">
+                    <i class="bi bi-cart-fill me-1"></i>Ventas
+                </button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="compras">
+                    <i class="bi bi-truck me-1"></i>Compras
+                </button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="almacen">
+                    <i class="bi bi-box-seam me-1"></i>Almacén
+                </button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="rrhh">
+                    <i class="bi bi-people-fill me-1"></i>Empleados
+                </button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="facturacion">
+                    <i class="bi bi-receipt me-1"></i>Facturación
+                </button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="pagos">
+                    <i class="bi bi-credit-card me-1"></i>Pagos
+                </button>
             </div>
         </div>
     </nav>
 
-    <main id="app-container" class="container-fluid py-4"></main>
+    <!-- Contenedor principal con loading overlay -->
+    <main id="app-container" class="container-fluid py-4">
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2 text-muted">Cargando módulo...</p>
+        </div>
+    </main>
 
+    <!-- Toast container para notificaciones -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
+            <div class="toast-header">
+                <strong class="me-auto"><i class="bi bi-info-circle-fill"></i> Notificación</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="modules/api/api.js"></script>
     <script src="app.js"></script>
 </body>
