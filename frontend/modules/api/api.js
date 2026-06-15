@@ -1,6 +1,8 @@
 // api.js - Gateway centralizado con mejor manejo de errores
 const GATEWAY = "http://localhost:8000";
-const TIMEOUT = 30000; // 30 segundos timeout
+const TIMEOUT = 30000;
+
+console.log("🔧 Inicializando api.js...");
 
 /**
  * Helper con timeout para fetch
@@ -32,7 +34,6 @@ window.api = async function(path, options = {}) {
     const url = `${GATEWAY}${path}`;
     
     try {
-        // Mostrar loading sutil en consola (opcional)
         console.debug(`🚀 API Request: ${options.method || 'GET'} ${path}`);
         
         const resp = await fetchWithTimeout(url, {
@@ -43,13 +44,37 @@ window.api = async function(path, options = {}) {
             ...options,
         });
 
-        // Manejo de errores específicos
         if (!resp.ok) {
             let errorMessage = `${resp.status} ${resp.statusText}`;
             
             try {
                 const errorData = await resp.json();
-                errorMessage = errorData.detail || errorData.message || errorMessage;
+                
+                if (resp.status === 400) {
+                    if (errorData.detail) {
+                        errorMessage = errorData.detail;
+                    } else if (errorData.message) {
+                        errorMessage = errorData.message;
+                    } else if (typeof errorData === 'string') {
+                        errorMessage = errorData;
+                    }
+                } else if (resp.status === 422 && errorData.detail) {
+                    if (Array.isArray(errorData.detail)) {
+                        const errores = errorData.detail.map(e => {
+                            const campo = e.loc?.filter(l => l !== 'body').join('.') || 'campo';
+                            return `${campo}: ${e.msg}`;
+                        });
+                        errorMessage = errores.join(', ');
+                    } else if (typeof errorData.detail === 'string') {
+                        errorMessage = errorData.detail;
+                    } else {
+                        errorMessage = JSON.stringify(errorData.detail);
+                    }
+                } else if (errorData.detail) {
+                    errorMessage = errorData.detail;
+                } else if (errorData.message) {
+                    errorMessage = errorData.message;
+                }
             } catch (e) {
                 const text = await resp.text();
                 if (text) errorMessage = `${errorMessage}: ${text.substring(0, 200)}`;
@@ -61,10 +86,8 @@ window.api = async function(path, options = {}) {
             throw error;
         }
 
-        // 204 No Content
         if (resp.status === 204) return null;
         
-        // Parsear JSON
         const data = await resp.json();
         console.debug(`✅ API Response: ${path}`, data);
         return data;
@@ -72,7 +95,6 @@ window.api = async function(path, options = {}) {
     } catch (error) {
         console.error(`❌ API Error [${path}]:`, error);
         
-        // Mejorar mensajes de error para el usuario
         if (error.name === 'TypeError' && error.message.includes('fetch')) {
             error.message = 'No se pudo conectar con el servidor. ¿Está el gateway funcionando?';
         } else if (error.message.includes('Timeout')) {
@@ -81,6 +103,12 @@ window.api = async function(path, options = {}) {
             error.message = `El recurso ${path} no existe en el servidor.`;
         } else if (error.status === 500) {
             error.message = 'Error interno del servidor. Contacte al administrador.';
+        } else if (error.status === 400) {
+            // Los mensajes 400 ya vienen del backend
+        } else if (error.status === 422) {
+            if (!error.message.includes('Datos inválidos')) {
+                error.message = `Datos inválidos: ${error.message}`;
+            }
         }
         
         throw error;
@@ -89,7 +117,7 @@ window.api = async function(path, options = {}) {
 
 // Helper para POST con datos
 window.apiPost = async function(path, data) {
-    return api(path, {
+    return window.api(path, {
         method: 'POST',
         body: JSON.stringify(data)
     });
@@ -97,7 +125,7 @@ window.apiPost = async function(path, data) {
 
 // Helper para PUT
 window.apiPut = async function(path, data) {
-    return api(path, {
+    return window.api(path, {
         method: 'PUT',
         body: JSON.stringify(data)
     });
@@ -105,24 +133,23 @@ window.apiPut = async function(path, data) {
 
 // Helper para DELETE
 window.apiDelete = async function(path) {
-    return api(path, {
+    return window.api(path, {
         method: 'DELETE'
     });
 };
 
-// Helper para cargar recursos con reintentos
+// 🔥 Helper para cargar recursos con reintentos (CORREGIDO)
 window.apiWithRetry = async function(path, options = {}, retries = 3) {
     let lastError;
     
     for (let i = 0; i < retries; i++) {
         try {
-            return await api(path, options);
+            return await window.api(path, options);
         } catch (error) {
             lastError = error;
-            console.warn(`Intento ${i + 1} fallido para ${path}:`, error.message);
+            console.warn(`⚠️ Intento ${i + 1} fallido para ${path}:`, error.message);
             
             if (i < retries - 1) {
-                // Esperar exponencialmente más antes de reintentar
                 const delay = Math.pow(2, i) * 1000;
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
@@ -131,3 +158,7 @@ window.apiWithRetry = async function(path, options = {}, retries = 3) {
     
     throw lastError;
 };
+
+console.log("✅ api.js cargado correctamente");
+console.log("✅ window.api disponible:", typeof window.api);
+console.log("✅ window.apiWithRetry disponible:", typeof window.apiWithRetry);

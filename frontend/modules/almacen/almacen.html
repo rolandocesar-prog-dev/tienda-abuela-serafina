@@ -1,38 +1,259 @@
-<div class="module-container">
-    <h2>Control de Inventario (Almacén)</h2>
-    
-    <div class="card p-3 mb-4 shadow-sm">
-        <h5>Registrar Movimiento</h5>
-        <form id="form-movimiento" class="row g-3">
-            <div class="col-md-2">
-                <select id="tipo" class="form-select" required>
-                    <option value="entrada">Entrada</option>
-                    <option value="salida">Salida</option>
-                </select>
+<div class="module-container fade-in">
+    <!-- Header con estadísticas -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-box-seam me-2"></i>Control de Inventario
+            </h2>
+            <p class="text-muted">Gestión de stock, movimientos y devoluciones</p>
+        </div>
+        <button class="btn btn-outline-primary" id="refresh-stock">
+            <i class="bi bi-arrow-repeat me-1"></i>Actualizar
+        </button>
+    </div>
+
+    <!-- Tarjetas de estadísticas -->
+    <div class="row mb-4 g-3" id="stats-container">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-box"></i></div>
+                <div class="stat-value" id="total-productos">-</div>
+                <div class="stat-label">Total Productos</div>
             </div>
-            <div class="col-md-3">
-                <select id="agencia_id" class="form-select" required>
-                    <option value="">Cargando agencias...</option>
-                </select>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-calculator"></i></div>
+                <div class="stat-value" id="total-unidades">-</div>
+                <div class="stat-label">Unidades en Stock</div>
             </div>
-            <div class="col-md-3">
-                <select id="producto_id" class="form-select" required>
-                    <option value="">Cargando productos...</option>
-                </select>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                <div class="stat-value" id="stock-bajo">-</div>
+                <div class="stat-label">Stock Bajo</div>
             </div>
-            <div class="col-md-2">
-                <input type="number" id="cantidad" class="form-control" placeholder="Cant." min="1" required>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-arrow-left-right"></i></div>
+                <div class="stat-value" id="movimientos-hoy">-</div>
+                <div class="stat-label">Movimientos Hoy</div>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-success w-100">Guardar</button>
+        </div>
+    </div>
+
+    <!-- Formulario de movimientos mejorado -->
+    <div class="form-modern mb-4">
+        <h5 class="mb-3">
+            <i class="bi bi-plus-slash-minus me-2"></i>Registrar Movimiento
+        </h5>
+        <form id="form-movimiento">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Tipo de Movimiento</label>
+                    <select id="tipo" class="form-select" required>
+                        <option value="entrada">📥 Entrada (Compras)</option>
+                        <option value="salida">📤 Salida (Ventas/Traspasos)</option>
+                        <option value="devolucion_cliente">🔄 Devolución de Cliente</option>
+                        <option value="devolucion_proveedor">⬅️ Devolución a Proveedor</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Agencia/Sucursal</label>
+                    <select id="agencia_id" class="form-select" required>
+                        <option value="">Cargando agencias...</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Producto</label>
+                    <select id="producto_id" class="form-select" required>
+                        <option value="">Cargando productos...</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Cantidad</label>
+                    <input type="number" id="cantidad" class="form-control" placeholder="0" min="1" required>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-lg me-1"></i>Registrar Movimiento
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 
-    <table class="table table-hover">
-        <thead class="table-light">
-            <tr><th>Producto</th><th>Agencia</th><th>Cantidad</th></tr>
-        </thead>
-        <tbody id="almacen-body"></tbody>
-    </table>
+    <!-- Filtros y búsqueda mejorados -->
+    <div class="filters-bar mb-4">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label-sm">🔍 Buscar</label>
+                <input type="text" id="search-stock" class="form-control" placeholder="Buscar producto...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-sm">📊 Estado de Stock</label>
+                <select id="filter-stock-bajo" class="form-select">
+                    <option value="todos">Todos los productos</option>
+                    <option value="bajo">⚠️ Stock bajo (≤ 10 unidades)</option>
+                    <option value="critico">🔴 Stock crítico (≤ 5 unidades)</option>
+                    <option value="agotado">❌ Agotados (0 unidades)</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-sm">🏢 Agencia</label>
+                <select id="filter-agencia" class="form-select">
+                    <option value="todas">Todas las agencias</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" id="clear-filters">
+                    <i class="bi bi-eraser"></i> Limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de stock mejorada con más espacio -->
+    <div class="table-responsive">
+        <table class="table table-stock table-hover">
+            <thead>
+                <tr>
+                    <th class="col-producto">Producto</th>
+                    <th class="col-agencia">Agencia</th>
+                    <th class="col-cantidad">Cantidad</th>
+                    <th class="col-estado">Estado</th>
+                    <th class="col-acciones">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="almacen-body">
+                <tr>
+                    <td colspan="5" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando inventario...</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <div id="pagination-container" class="mt-4 d-flex justify-content-center"></div>
+
+    <!-- Historial de movimientos recientes -->
+    <div class="movimientos-section mt-5">
+        <div class="section-header mb-3">
+            <h5 class="mb-0">
+                <i class="bi bi-clock-history me-2"></i>Movimientos Recientes
+            </h5>
+            <button class="btn btn-sm btn-outline-primary" id="ver-todos-movimientos">
+                <i class="bi bi-list-ul me-1"></i> Ver historial completo
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-movimientos">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Producto</th>
+                        <th>Agencia</th>
+                        <th>Cantidad</th>
+                        <th>Motivo</th>
+                    </tr>
+                </thead>
+                <tbody id="movimientos-recientes-body">
+                    <tr><td colspan="6" class="text-center text-muted py-4">Cargando movimientos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ajuste rápido -->
+<div class="modal fade" id="modalAjusteStock" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil-square me-2"></i>Ajustar Stock
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="ajuste-producto-id">
+                <input type="hidden" id="ajuste-agencia-id">
+                <div class="info-row mb-3">
+                    <label class="text-muted small">Producto</label>
+                    <p id="ajuste-producto-nombre" class="fw-bold fs-5 mb-0"></p>
+                </div>
+                <div class="info-row mb-3">
+                    <label class="text-muted small">Stock actual</label>
+                    <p id="ajuste-stock-actual" class="fs-4 fw-bold text-primary mb-0"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tipo de ajuste</label>
+                    <select id="ajuste-tipo" class="form-select">
+                        <option value="entrada">➕ Incrementar stock (Compras/Devoluciones cliente)</option>
+                        <option value="salida">➖ Reducir stock (Ventas/Devoluciones proveedor)</option>
+                        <option value="ajuste">📊 Ajuste por inventario</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Cantidad</label>
+                    <input type="number" id="ajuste-cantidad" class="form-control form-control-lg" min="1" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Motivo (opcional)</label>
+                    <textarea id="ajuste-motivo" class="form-control" rows="2" placeholder="Ej: Ajuste por inventario físico, devolución, etc."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-confirmar-ajuste">
+                    <i class="bi bi-check-circle me-1"></i> Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver todos los movimientos -->
+<div class="modal fade" id="modalTodosMovimientos" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-list-ul me-2"></i>Historial Completo de Movimientos
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" id="search-movimientos" class="form-control" placeholder="🔍 Buscar por producto...">
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-movimientos-modal">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Producto</th>
+                                <th>Agencia</th>
+                                <th>Cantidad</th>
+                                <th>Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="todos-movimientos-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
 </div>

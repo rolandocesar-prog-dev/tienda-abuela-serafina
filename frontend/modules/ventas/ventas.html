@@ -1,32 +1,160 @@
-<div class="container mt-4">
-    <h3>Nueva Venta</h3>
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card p-3">
-                <form id="form-venta">
-                    <div class="mb-3">
-                        <label>Agencia</label>
-                        <select id="agencia_id" class="form-control" required></select>
+<div class="module-container fade-in">
+    <!-- Header con estadísticas -->
+    <div class="stats-grid mb-4">
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value" id="ventas-hoy">-</div>
+            <div class="stat-label">Ventas Hoy</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value" id="total-ventas">-</div>
+            <div class="stat-label">Total Ventas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value" id="clientes-atendidos">-</div>
+            <div class="stat-label">Clientes Hoy</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-value" id="promedio-venta">-</div>
+            <div class="stat-label">Ticket Promedio</div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Columna izquierda - Productos y búsqueda -->
+        <div class="col-lg-5">
+            <div class="form-modern mb-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-search me-2"></i>Buscar Producto
+                </h5>
+                <div class="mb-3">
+                    <input type="text" id="buscador-producto" class="form-control" placeholder="🔍 Buscar por nombre...">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Agencia *</label>
+                    <select id="agencia_id" class="form-select" required>
+                        <option value="">Seleccionar agencia...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Lista de productos -->
+            <div class="form-modern">
+                <h5 class="mb-3">
+                    <i class="bi bi-grid-3x3-gap-fill me-2"></i>Productos Disponibles
+                </h5>
+                <div class="productos-grid" id="productos-container" style="max-height: 500px; overflow-y: auto;">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary"></div>
+                        <p class="mt-2 text-muted">Cargando productos...</p>
                     </div>
-                    <div class="mb-3">
-                        <label>Producto</label>
-                        <select id="producto_id" class="form-control"></select>
-                    </div>
-                    <div class="mb-3">
-                        <label>Cantidad</label>
-                        <input type="number" id="cantidad" class="form-control" value="1" min="1">
-                    </div>
-                    <button type="button" class="btn btn-secondary w-100" onclick="agregarAlCarrito()">Añadir al Carrito</button>
-                </form>
+                </div>
             </div>
         </div>
-        <div class="col-md-8">
-            <table class="table">
-                <thead><tr><th>Producto</th><th>Cant</th><th>Precio</th><th>Subtotal</th></tr></thead>
-                <tbody id="carrito-body"></tbody>
-            </table>
-            <h4>Total: Bs. <span id="total-venta">0.00</span></h4>
-            <button class="btn btn-primary" onclick="finalizarVenta()">Confirmar Venta</button>
+
+        <!-- Columna derecha - Carrito de compras -->
+        <div class="col-lg-7">
+            <div class="form-modern">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cart-fill me-2"></i>Carrito de Compras
+                    </h5>
+                    <span class="badge bg-primary fs-6" id="total-items">0 items</span>
+                </div>
+
+                <!-- Datos del cliente -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Cliente (opcional)</label>
+                        <input type="text" id="cliente-nombre" class="form-control" placeholder="Nombre del cliente">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">NIT/CI (opcional)</label>
+                        <input type="text" id="cliente-documento" class="form-control" placeholder="NIT o CI">
+                    </div>
+                </div>
+
+                <!-- Tabla del carrito -->
+                <div class="table-responsive">
+                    <table class="table table-ventas">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Precio</th>
+                                <th>Subtotal</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="carrito-body">
+                            <tr><td colspan="5" class="text-center py-4 text-muted">No hay productos en el carrito</td></tr>
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Total:</td>
+                                <td colspan="2" class="fw-bold text-primary fs-5" id="total-venta">Bs 0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Método de pago -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Método de Pago</label>
+                        <select id="metodo-pago" class="form-select">
+                            <option value="efectivo">💵 Efectivo</option>
+                            <option value="transferencia">🏦 Transferencia / QR</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sm">Monto Recibido (efectivo)</label>
+                        <input type="number" id="monto-recibido" class="form-control" placeholder="0.00" step="0.01">
+                        <small id="cambio-text" class="text-muted"></small>
+                    </div>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-success flex-grow-1" id="btn-finalizar-venta">
+                        <i class="bi bi-check-circle me-1"></i> Confirmar Venta
+                    </button>
+                    <button class="btn btn-outline-danger" id="btn-limpiar-carrito">
+                        <i class="bi bi-trash me-1"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmar venta -->
+<div class="modal fade" id="modalConfirmarVenta" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle me-2"></i>Confirmar Venta
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="bi bi-receipt" style="font-size: 3rem;"></i>
+                </div>
+                <p><strong>Total:</strong> <span id="confirm-total" class="fw-bold text-primary fs-4"></span></p>
+                <p><strong>Método de Pago:</strong> <span id="confirm-metodo"></span></p>
+                <p><strong>Cliente:</strong> <span id="confirm-cliente">Consumidor Final</span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btn-confirmar-venta">
+                    <i class="bi bi-check-circle me-1"></i> Confirmar
+                </button>
+            </div>
         </div>
     </div>
 </div>

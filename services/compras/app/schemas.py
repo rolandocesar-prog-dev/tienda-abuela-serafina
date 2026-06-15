@@ -33,6 +33,7 @@ class OrdenItemIn(BaseModel):
 
 class OrdenCompraCreate(BaseModel):
     proveedor_id: uuid.UUID
+    agencia_origen_id: uuid.UUID | None = None  # 🔥 NUEVO: agencia de donde sale el stock
     agencia_destino_id: uuid.UUID
     items: list[OrdenItemIn] = Field(..., min_length=1)
 
@@ -49,6 +50,7 @@ class OrdenItemOut(BaseModel):
 class OrdenCompraOut(BaseModel):
     id: uuid.UUID
     proveedor_id: uuid.UUID
+    agencia_origen_id: uuid.UUID | None = None  # 🔥 NUEVO
     agencia_destino_id: uuid.UUID
     fecha: datetime
     estado: EstadoOrden

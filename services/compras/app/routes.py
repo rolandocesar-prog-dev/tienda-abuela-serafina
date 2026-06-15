@@ -73,6 +73,7 @@ async def crear_orden(payload: OrdenCompraCreate, db: AsyncSession = Depends(get
     # 3. Guardar en estado Pendiente
     nueva_orden = OrdenCompra(
         proveedor_id=payload.proveedor_id,
+        agencia_origen_id=payload.agencia_origen_id,  # 🔥 NUEVO
         agencia_destino_id=payload.agencia_destino_id,
         total=total_orden,
         items=items_db
@@ -111,19 +112,33 @@ async def recepcionar_orden(orden_id: uuid.UUID, db: AsyncSession = Depends(get_
         raise HTTPException(status_code=400, detail=f"La orden no puede recepcionarse porque está {orden.estado.value}")
 
     async with httpx.AsyncClient() as client:
-        # 1. Avisar a Almacén que ingrese el stock
         for item in orden.items:
-            mov_payload = {
+            # 🔥 1. Descontar stock de la agencia ORIGEN (si existe)
+            if orden.agencia_origen_id:
+                mov_salida_payload = {
+                    "agencia_id": str(orden.agencia_origen_id),
+                    "producto_id": str(item.producto_id),
+                    "cantidad": item.cantidad,
+                    "tipo": "salida",
+                    "motivo": f"Transferencia por orden de compra a agencia {orden.agencia_destino_id}"
+                }
+                res_salida = await client.post(f"{ALMACEN_URL}/movimientos", json=mov_salida_payload)
+                if res_salida.status_code != 201:
+                    raise HTTPException(status_code=500, detail=f"Fallo al descontar stock en Almacén: {res_salida.text}")
+            
+            # 🔥 2. Sumar stock a la agencia DESTINO
+            mov_entrada_payload = {
                 "agencia_id": str(orden.agencia_destino_id),
                 "producto_id": str(item.producto_id),
                 "cantidad": item.cantidad,
-                "tipo": "entrada"  # <--- Sube el stock
+                "tipo": "entrada",
+                "motivo": f"Recepción de orden de compra {orden.id}"
             }
-            res_almacen = await client.post(f"{ALMACEN_URL}/movimientos", json=mov_payload)
-            if res_almacen.status_code != 201:
-                raise HTTPException(status_code=500, detail=f"Fallo al ingresar stock en Almacén: {res_almacen.text}")
+            res_entrada = await client.post(f"{ALMACEN_URL}/movimientos", json=mov_entrada_payload)
+            if res_entrada.status_code != 201:
+                raise HTTPException(status_code=500, detail=f"Fallo al ingresar stock en Almacén: {res_entrada.text}")
 
-        # 2. Avisar a Pagos que le debemos al proveedor
+        # 3. Avisar a Pagos que le debemos al proveedor
         pago_payload = {
             "proveedor_id": str(orden.proveedor_id),
             "orden_compra_id": str(orden.id),
@@ -135,7 +150,7 @@ async def recepcionar_orden(orden_id: uuid.UUID, db: AsyncSession = Depends(get_
         
         cuenta_pagar_data = res_pagos.json()
 
-    # 3. Finalizar la orden internamente
+    # 4. Finalizar la orden internamente
     orden.estado = EstadoOrden.recibida
     orden.cuenta_por_pagar_id = uuid.UUID(cuenta_pagar_data["id"])
     

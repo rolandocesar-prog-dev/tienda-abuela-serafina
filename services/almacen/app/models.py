@@ -10,14 +10,15 @@ from app.database import Base
 
 
 class TipoMovimiento(str, enum.Enum):
-    entrada = "entrada"
-    salida = "salida"
-    ajuste = "ajuste"
+    entrada = "entrada"                    # + Stock (compras)
+    salida = "salida"                      # - Stock (ventas)
+    ajuste = "ajuste"                      # Ajuste manual
+    devolucion_cliente = "devolucion_cliente"    # + Stock (cliente devuelve)
+    devolucion_proveedor = "devolucion_proveedor"  # - Stock (devuelve a proveedor)
+    transferencia = "transferencia"        # - Origen, + Destino
 
 
 class Agencia(Base):
-    """Lookup table de agencias — poblada en lifespan vía seed.py."""
-
     __tablename__ = "agencias"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -44,5 +45,10 @@ class Movimiento(Base):
     agencia_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
     producto_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
     cantidad: Mapped[int] = mapped_column(Integer, nullable=False)
-    referencia: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    cantidad_antes: Mapped[int] = mapped_column(Integer, nullable=True, default=0)  # Cambiado
+    cantidad_despues: Mapped[int] = mapped_column(Integer, nullable=True, default=0)  # Cambiado
+    referencia_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
+    referencia_tipo: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    motivo: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    usuario_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     fecha: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

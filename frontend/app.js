@@ -4,6 +4,26 @@ let currentScript = null;
 let currentCss = null;
 let currentModule = null;
 let toastInstance = null;
+let isLoadingModule = false;
+
+// Verificar que api.js está cargado
+function esperarApi() {
+    return new Promise((resolve) => {
+        if (typeof window.api !== 'undefined' && window.api !== null) {
+            console.log("✅ api.js ya está listo");
+            resolve();
+        } else {
+            console.log("⏳ Esperando que api.js se cargue...");
+            const checkInterval = setInterval(() => {
+                if (typeof window.api !== 'undefined' && window.api !== null) {
+                    clearInterval(checkInterval);
+                    console.log("✅ api.js listo");
+                    resolve();
+                }
+            }, 50);
+        }
+    });
+}
 
 // Inicializar Toast de Bootstrap
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,18 +32,18 @@ document.addEventListener('DOMContentLoaded', () => {
         toastInstance = new bootstrap.Toast(toastEl);
     }
     
-    // Mostrar fecha actual
     actualizarFecha();
     
-    // Cargar agencias
-    cargarAgencias();
-    
-    // Botón de refresh
     document.getElementById('btn-refresh')?.addEventListener('click', () => {
-        if (currentModule) {
+        if (currentModule && !isLoadingModule) {
             cargarModulo(currentModule);
             mostrarNotificacion('Recargando módulo...', 'info');
         }
+    });
+    
+    // Iniciar después de esperar API
+    esperarApi().then(() => {
+        cargarModulo("catalog");
     });
 });
 
@@ -31,50 +51,33 @@ document.addEventListener('DOMContentLoaded', () => {
 function actualizarFecha() {
     const fecha = new Date();
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('fecha-actual').textContent = fecha.toLocaleDateString('es-ES', options);
-}
-
-// Cargar agencias disponibles
-async function cargarAgencias() {
-    try {
-        const agencias = await api('/rrhh/agencias');
-        const select = document.getElementById('agencia');
-        
-        if (agencias && agencias.length > 0) {
-            select.innerHTML = '<option value="">Seleccionar agencia</option>';
-            agencias.forEach(agencia => {
-                const option = document.createElement('option');
-                option.value = agencia.id;
-                option.textContent = `${agencia.nombre} - ${agencia.ubicacion || 'Sin ubicación'}`;
-                select.appendChild(option);
-            });
-            
-            // Guardar agencia seleccionada
-            select.addEventListener('change', (e) => {
-                localStorage.setItem('agencia_id', e.target.value);
-                mostrarNotificacion(`Agencia seleccionada: ${select.options[select.selectedIndex]?.text}`, 'success');
-            });
-            
-            // Restaurar agencia guardada
-            const savedAgencia = localStorage.getItem('agencia_id');
-            if (savedAgencia) {
-                select.value = savedAgencia;
-            }
-        }
-    } catch (error) {
-        console.error('Error cargando agencias:', error);
-        document.getElementById('agencia').innerHTML = '<option value="">Error cargando agencias</option>';
+    const fechaEl = document.getElementById('fecha-actual');
+    if (fechaEl) {
+        fechaEl.textContent = fecha.toLocaleDateString('es-ES', options);
     }
 }
 
 // Mostrar notificaciones
 function mostrarNotificacion(mensaje, tipo = 'info') {
-    if (!toastInstance) return;
+    if (!toastInstance) {
+        if (tipo === 'error') {
+            Swal.fire({
+                title: 'Error',
+                text: mensaje,
+                icon: 'error',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+        return;
+    }
     
     const toastBody = document.querySelector('#liveToast .toast-body');
     const toastHeader = document.querySelector('#liveToast .toast-header strong');
     
-    toastBody.textContent = mensaje;
+    if (toastBody) toastBody.textContent = mensaje;
     
     const iconos = {
         success: '<i class="bi bi-check-circle-fill text-success"></i> Éxito',
@@ -83,12 +86,13 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
         info: '<i class="bi bi-info-circle-fill text-info"></i> Información'
     };
     
-    toastHeader.innerHTML = iconos[tipo] || iconos.info;
+    if (toastHeader) toastHeader.innerHTML = iconos[tipo] || iconos.info;
     toastInstance.show();
 }
 
 // Mostrar loading
 function mostrarLoading(mensaje = 'Cargando...') {
+    if (!appContainer) return;
     appContainer.innerHTML = `
         <div class="text-center py-5">
             <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
@@ -99,8 +103,20 @@ function mostrarLoading(mensaje = 'Cargando...') {
     `;
 }
 
-// Cargar módulo mejorado
+// Cargar módulo
 async function cargarModulo(nombre) {
+    if (isLoadingModule) {
+        console.log(`⏳ Ya cargando un módulo, ignorando solicitud para: ${nombre}`);
+        return;
+    }
+    
+    if (currentModule === nombre) {
+        console.log(`📌 Módulo ${nombre} ya está cargado`);
+        return;
+    }
+    
+    isLoadingModule = true;
+    
     try {
         currentModule = nombre;
         mostrarLoading(`Cargando módulo ${nombre}...`);
@@ -120,19 +136,26 @@ async function cargarModulo(nombre) {
         currentCss.href = `modules/${nombre}/${nombre}.css`;
         document.head.appendChild(currentCss);
         
-        // 3. Cargar JS
-        if (currentScript) currentScript.remove();
+        // 3. Cargar JS - Remover script anterior
+        if (currentScript) {
+            currentScript.remove();
+            // Esperar un poco para que se limpie
+            await new Promise(r => setTimeout(r, 50));
+        }
+        
         currentScript = document.createElement("script");
-        currentScript.src = `modules/${nombre}/${nombre}.js`;
+        currentScript.src = `modules/${nombre}/${nombre}.js?v=${Date.now()}`;
         
         currentScript.onload = () => {
             const initFunction = `init${nombre.charAt(0).toUpperCase()}${nombre.slice(1)}`;
             if (typeof window[initFunction] === "function") {
                 window[initFunction]();
-                mostrarNotificacion(`Módulo ${nombre} cargado correctamente`, 'success');
+                mostrarNotificacion(`✅ Módulo ${nombre} cargado`, 'success');
             } else {
-                console.warn(`Función ${initFunction} no encontrada`);
+                console.warn(`⚠️ Función ${initFunction} no encontrada`);
+                mostrarNotificacion(`Módulo ${nombre} cargado`, 'info');
             }
+            isLoadingModule = false;
         };
         
         currentScript.onerror = () => {
@@ -143,40 +166,47 @@ async function cargarModulo(nombre) {
         
     } catch (error) {
         console.error("Error cargando módulo:", error);
-        mostrarNotificacion(`Error cargando módulo: ${error.message}`, 'error');
-        appContainer.innerHTML = `
-            <div class="alert alert-danger shadow-sm fade-in" role="alert">
-                <i class="bi bi-exclamation-octagon-fill me-2"></i>
-                <strong>Error:</strong> No se pudo cargar el módulo "${nombre}"
-                <hr>
-                <p class="mb-0">${error.message}</p>
-                <button class="btn btn-outline-danger mt-3" onclick="location.reload()">
-                    <i class="bi bi-arrow-repeat me-1"></i>Recargar página
-                </button>
-            </div>
-        `;
+        mostrarNotificacion(`❌ Error: ${error.message}`, 'error');
+        isLoadingModule = false;
+        if (appContainer) {
+            appContainer.innerHTML = `
+                <div class="alert alert-danger shadow-sm fade-in" role="alert">
+                    <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                    <strong>Error:</strong> No se pudo cargar el módulo "${nombre}"
+                    <hr>
+                    <p class="mb-0">${error.message}</p>
+                    <button class="btn btn-outline-danger mt-3" onclick="location.reload()">
+                        <i class="bi bi-arrow-repeat me-1"></i>Recargar página
+                    </button>
+                </div>
+            `;
+        }
     }
 }
 
-// Navegación mejorada
-document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", async (e) => {
-        const target = btn.dataset.tab;
-        
-        // Actualizar UI
-        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        
-        // Cargar módulo
-        await cargarModulo(target);
-        
-        // Scroll suave al inicio
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+// Navegación
+function iniciarNavegacion() {
+    const tabs = document.querySelectorAll(".tab-btn");
+    tabs.forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const target = btn.dataset.tab;
+            if (!target || currentModule === target) return;
+            
+            tabs.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            
+            await cargarModulo(target);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
     });
-});
+}
 
-// Módulo inicial
-cargarModulo("catalog");
+// Iniciar navegación después de que el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', iniciarNavegacion);
+} else {
+    iniciarNavegacion();
+}
 
 // Exportar funciones globales
 window.mostrarNotificacion = mostrarNotificacion;

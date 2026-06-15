@@ -1,15 +1,190 @@
-<div class="module-container">
-    <h2>Gestión de Personal (RRHH)</h2>
-    <div class="card p-3 mb-4">
-        <form id="form-empleado" class="row g-3">
-            <div class="col-md-3"><input type="text" id="nombre" class="form-control" placeholder="Nombre" required></div>
-            <div class="col-md-3"><input type="text" id="apellido" class="form-control" placeholder="Apellido" required></div>
-            <div class="col-md-2"><input type="text" id="ci" class="form-control" placeholder="CI" required></div>
-            <div class="col-md-4"><button type="submit" class="btn btn-primary">Registrar Empleado</button></div>
-        </form>
+<div class="module-container fade-in">
+    <!-- Header con estadísticas -->
+    <div class="stats-grid mb-4">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value" id="total-empleados">-</div>
+            <div class="stat-label">Total Empleados</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value" id="total-salarios">-</div>
+            <div class="stat-label">Masa Salarial</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-value" id="salario-promedio">-</div>
+            <div class="stat-label">Salario Promedio</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🏢</div>
+            <div class="stat-value" id="total-agencias">-</div>
+            <div class="stat-label">Agencias</div>
+        </div>
     </div>
-    <table class="table table-striped">
-        <thead><tr><th>Nombre</th><th>Cargo</th><th>Salario</th><th>Acciones</th></tr></thead>
-        <tbody id="rrhh-body"></tbody>
-    </table>
+
+    <!-- Barra de acciones -->
+    <div class="actions-bar mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h3 class="mb-0">
+                <i class="bi bi-people-fill me-2"></i>Gestión de Personal
+            </h3>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" id="btn-nuevo-empleado">
+                    <i class="bi bi-person-plus me-1"></i>Nuevo Empleado
+                </button>
+                <button class="btn btn-outline-primary" id="btn-actualizar">
+                    <i class="bi bi-arrow-repeat"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="filters-bar mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label-sm">🔍 Buscar</label>
+                <input type="text" id="buscar-empleado" class="form-control" placeholder="Nombre, apellido o CI...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-sm">🏢 Agencia</label>
+                <select id="filtro-agencia" class="form-select">
+                    <option value="todas">Todas las agencias</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-sm">📋 Cargo</label>
+                <select id="filtro-cargo" class="form-select">
+                    <option value="todos">Todos los cargos</option>
+                    <option value="Gerente">Gerente</option>
+                    <option value="Supervisor">Supervisor</option>
+                    <option value="Vendedor">Vendedor</option>
+                    <option value="Cajero">Cajero</option>
+                    <option value="Administrativo">Administrativo</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" id="limpiar-filtros">
+                    <i class="bi bi-eraser"></i> Limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de empleados mejorada -->
+    <div class="table-responsive">
+        <table class="table table-rrhh table-hover">
+            <thead>
+                <tr>
+                    <th>Empleado</th>
+                    <th>CI</th>
+                    <th>Cargo</th>
+                    <th>Agencia</th>
+                    <th>Fecha Ingreso</th>
+                    <th>Salario</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="rrhh-body">
+                <tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Cargando empleados...</p></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <div id="pagination-container" class="mt-4 d-flex justify-content-center"></div>
+</div>
+
+<!-- Modal para crear/editar empleado -->
+<div class="modal fade" id="modalEmpleado" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-person-badge me-2"></i>
+                    <span id="modal-titulo">Nuevo Empleado</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-empleado">
+                    <input type="hidden" id="empleado-id">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre *</label>
+                            <input type="text" id="nombre" class="form-control" placeholder="Ej: Juan" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Apellido *</label>
+                            <input type="text" id="apellido" class="form-control" placeholder="Ej: Pérez" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">CI *</label>
+                            <input type="text" id="ci" class="form-control" placeholder="Ej: 1234567" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Cargo *</label>
+                            <select id="cargo" class="form-select" required>
+                                <option value="">Seleccionar cargo...</option>
+                                <option value="Gerente">Gerente</option>
+                                <option value="Supervisor">Supervisor</option>
+                                <option value="Vendedor">Vendedor</option>
+                                <option value="Cajero">Cajero</option>
+                                <option value="Administrativo">Administrativo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Salario (Bs) *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Bs</span>
+                                <input type="number" id="salario" class="form-control" placeholder="0.00" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Agencia *</label>
+                            <select id="agencia_id" class="form-select" required>
+                                <option value="">Seleccionar agencia...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Fecha de Ingreso *</label>
+                            <input type="date" id="fecha_ingreso" class="form-control" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-guardar-empleado">
+                    <i class="bi bi-check-circle me-1"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmar eliminación -->
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar a <strong id="empleado-eliminar-nombre"></strong>?</p>
+                <p class="text-muted small">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btn-confirmar-eliminar">
+                    <i class="bi bi-trash me-1"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>

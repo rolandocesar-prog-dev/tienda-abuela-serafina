@@ -36,16 +36,22 @@ async def registrar_movimiento(payload: MovimientoCreate, db: AsyncSession = Dep
     
     cantidad_actual = stock.cantidad if stock else 0
     
+    # 🔥 TIPOS QUE DISMINUYEN EL STOCK (salidas)
+    tipos_salida = [TipoMovimiento.salida, TipoMovimiento.devolucion_proveedor, TipoMovimiento.transferencia]
+    
+    # 🔥 TIPOS QUE AUMENTAN EL STOCK (entradas)
+    tipos_entrada = [TipoMovimiento.entrada, TipoMovimiento.devolucion_cliente]
+    
     # 2. Validar stock en caso de salida
-    if payload.tipo == TipoMovimiento.salida and cantidad_actual < payload.cantidad:
+    if payload.tipo in tipos_salida and cantidad_actual < payload.cantidad:
         raise HTTPException(status_code=409, detail="Stock insuficiente para esta salida.")
 
     # 3. Calcular nueva cantidad
-    if payload.tipo == TipoMovimiento.entrada:
+    if payload.tipo in tipos_entrada:
         nueva_cantidad = cantidad_actual + payload.cantidad
-    elif payload.tipo == TipoMovimiento.salida:
+    elif payload.tipo in tipos_salida:
         nueva_cantidad = cantidad_actual - payload.cantidad
-    else: # ajuste (reemplaza el stock actual)
+    else:  # ajuste (reemplaza el stock actual)
         nueva_cantidad = payload.cantidad
 
     # 4. Actualizar o crear stock

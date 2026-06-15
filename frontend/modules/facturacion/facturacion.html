@@ -1,41 +1,169 @@
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>🧾 Historial de Facturas</h2>
-        <button class="btn btn-outline-primary" onclick="cargarFacturas()">
-            <i class="bi bi-arrow-clockwise"></i> Actualizar
-        </button>
+<div class="module-container fade-in">
+    <!-- Header con estadísticas -->
+    <div class="stats-grid mb-4">
+        <div class="stat-card">
+            <div class="stat-icon">🧾</div>
+            <div class="stat-value" id="total-facturas">-</div>
+            <div class="stat-label">Total Facturas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value" id="total-facturado">-</div>
+            <div class="stat-label">Total Facturado</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-value" id="facturas-hoy">-</div>
+            <div class="stat-label">Facturas Hoy</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-value" id="promedio-factura">-</div>
+            <div class="stat-label">Promedio por Factura</div>
+        </div>
     </div>
 
-    <div class="table-responsive shadow-sm rounded">
-        <table class="table table-hover align-middle" id="tabla-facturas">
-            <thead class="table-dark">
+    <!-- Barra de acciones -->
+    <div class="actions-bar mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h3 class="mb-0">
+                <i class="bi bi-receipt me-2"></i>Historial de Facturas
+            </h3>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" id="btn-actualizar" onclick="cargarFacturas()">
+                    <i class="bi bi-arrow-repeat me-1"></i> Actualizar
+                </button>
+                <button class="btn btn-outline-secondary" id="btn-exportar" onclick="exportarFacturas()">
+                    <i class="bi bi-download me-1"></i> Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="filters-bar mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label-sm">🔍 Buscar</label>
+                <input type="text" id="buscador-facturas" class="form-control" placeholder="Número, cliente o NIT...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-sm">📅 Desde</label>
+                <input type="date" id="filtro-fecha-desde" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-sm">📅 Hasta</label>
+                <input type="date" id="filtro-fecha-hasta" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-sm">💰 Monto mínimo</label>
+                <input type="number" id="filtro-monto-min" class="form-control" placeholder="Ej: 100" step="0.01">
+            </div>
+        </div>
+        <div class="row g-3 mt-2">
+            <div class="col-md-12">
+                <button class="btn btn-primary" id="btn-aplicar-filtros">
+                    <i class="bi bi-funnel me-1"></i> Aplicar Filtros
+                </button>
+                <button class="btn btn-outline-secondary ms-2" id="btn-limpiar-filtros">
+                    <i class="bi bi-eraser me-1"></i> Limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de facturas mejorada -->
+    <div class="table-responsive">
+        <table class="table table-facturas table-hover">
+            <thead>
                 <tr>
-                    <th>Correlativo</th>
-                    <th>Fecha y Hora</th>
+                    <th>N° Factura</th>
+                    <th>Fecha</th>
                     <th>Cliente</th>
                     <th>NIT/CI</th>
                     <th>Subtotal</th>
                     <th>IVA (13%)</th>
-                    <th>Total Pagado</th>
+                    <th>Total</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="tbody-facturas">
-                </tbody>
+                <tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Cargando facturas...</p></td></tr>
+            </tbody>
         </table>
     </div>
+
+    <!-- Paginación -->
+    <div id="pagination-container" class="mt-4 d-flex justify-content-center"></div>
 </div>
 
-<div class="modal fade" id="modalDetalleFactura" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+<!-- Modal para detalle de factura mejorado -->
+<div class="modal fade" id="modalDetalleFactura" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalFacturaTitulo">Detalle de Factura</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-receipt me-2"></i>
+                    <span id="modalFacturaTitulo">Detalle de Factura</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <ul class="list-group" id="lista-items-factura">
-                    </ul>
+                <div class="factura-header mb-3 p-3 bg-light rounded">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Número de Factura</small>
+                            <p class="fw-bold mb-0" id="detalle-numero">-</p>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Fecha de Emisión</small>
+                            <p class="fw-bold mb-0" id="detalle-fecha">-</p>
+                        </div>
+                        <div class="col-6 mt-2">
+                            <small class="text-muted">Cliente</small>
+                            <p class="fw-bold mb-0" id="detalle-cliente">-</p>
+                        </div>
+                        <div class="col-6 mt-2">
+                            <small class="text-muted">NIT/CI</small>
+                            <p class="fw-bold mb-0" id="detalle-documento">-</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <h6 class="mb-2">Productos</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Cantidad</th>
+                                <th>Producto</th>
+                                <th>Precio Unit.</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-items-factura"></tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Subtotal:</td>
+                                <td class="fw-bold" id="detalle-subtotal">Bs 0.00</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">IVA (13%):</td>
+                                <td class="fw-bold" id="detalle-iva">Bs 0.00</td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td colspan="3" class="text-end fw-bold">Total Pagado:</td>
+                                <td class="fw-bold fs-5" id="detalle-total">Bs 0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="imprimirFactura()">
+                    <i class="bi bi-printer me-1"></i> Imprimir
+                </button>
             </div>
         </div>
     </div>

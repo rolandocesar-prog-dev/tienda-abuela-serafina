@@ -26,6 +26,15 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 
+# ========== LISTAR TODOS LOS PAGOS (HISTORIAL) ==========
+@router.get("/pagos", response_model=list[PagoOut])
+async def listar_pagos(db: AsyncSession = Depends(get_db)):
+    """Listar todos los pagos registrados ordenados por fecha descendente"""
+    stmt = select(Pago).order_by(Pago.fecha.desc())
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
+
+
 # ---------- Pagos ----------
 @router.post("/pagos", response_model=PagoOut, status_code=status.HTTP_201_CREATED)
 async def crear_pago(payload: PagoCreate, db: AsyncSession = Depends(get_db)):
@@ -43,7 +52,6 @@ async def crear_pago(payload: PagoCreate, db: AsyncSession = Depends(get_db)):
             raise HTTPException(status_code=503, detail="Pasarela de pago no configurada (Falta STRIPE_SECRET_KEY)")
         
         try:
-            # Crear el PaymentIntent en Stripe (monto en centavos, asumimos moneda BOB o USD)
             intent = stripe.PaymentIntent.create(
                 amount=int(payload.monto * 100),
                 currency="bob",
@@ -55,35 +63,41 @@ async def crear_pago(payload: PagoCreate, db: AsyncSession = Depends(get_db)):
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
     else:
-        # Efectivo o Transferencia se marcan como completados directamente
         nuevo_pago.estado = EstadoPago.completado
 
     db.add(nuevo_pago)
 
-    # ACTUALIZAR CUENTA POR PAGAR
+    # ACTUALIZAR CUENTA POR PAGAR (PROVEEDORES)
     if payload.tipo == TipoPago.compra:
-
         stmt = select(CuentaPorPagar).where(
             CuentaPorPagar.orden_compra_id == payload.referencia_id
         )
-
         result = await db.execute(stmt)
-
         cuenta = result.scalars().first()
 
         if cuenta:
-
             cuenta.monto_pagado += payload.monto
-
             if cuenta.monto_pagado >= cuenta.monto_total:
+                cuenta.monto_pagado = cuenta.monto_total
+                cuenta.estado = EstadoCuenta.pagada
 
+    # ACTUALIZAR CUENTA POR COBRAR (CLIENTES) - NUEVO
+    if payload.tipo == TipoPago.venta:
+        stmt = select(CuentaPorCobrar).where(
+            CuentaPorCobrar.venta_id == payload.referencia_id
+        )
+        result = await db.execute(stmt)
+        cuenta = result.scalars().first()
+
+        if cuenta:
+            cuenta.monto_pagado += payload.monto
+            if cuenta.monto_pagado >= cuenta.monto_total:
                 cuenta.monto_pagado = cuenta.monto_total
                 cuenta.estado = EstadoCuenta.pagada
 
     await db.commit()
     await db.refresh(nuevo_pago)
     
-    # Truco para que Pydantic lea el client_secret aunque no esté en la BD
     setattr(nuevo_pago, 'client_secret', client_secret)
     return nuevo_pago
 
@@ -150,7 +164,7 @@ async def abonar_cuenta_pagar(cuenta_id: uuid.UUID, payload: AbonoCuenta, db: As
     cuenta.monto_pagado += payload.monto
     if cuenta.monto_pagado >= cuenta.monto_total:
         cuenta.estado = EstadoCuenta.pagada
-        cuenta.monto_pagado = cuenta.monto_total  # Prevenir sobrepagos matemáticos
+        cuenta.monto_pagado = cuenta.monto_total
         
     await db.commit()
     await db.refresh(cuenta)
