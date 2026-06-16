@@ -11,9 +11,7 @@ from app.database import Base
 
 class Rol(str, enum.Enum):
     administrador = "Administrador"
-    cajero = "Cajero"
-    supervisor = "Supervisor"
-    gerente = "Gerente"
+    vendedor = "Vendedor"
 
 
 class Usuario(Base):
@@ -25,7 +23,8 @@ class Usuario(Base):
     username: Mapped[str] = mapped_column(String(60), unique=True, nullable=False, index=True)
     email: Mapped[str] = mapped_column(String(200), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(256), nullable=False)
-    rol: Mapped[Rol] = mapped_column(Enum(Rol), nullable=False, default=Rol.cajero)
+    rol: Mapped[Rol] = mapped_column(Enum(Rol), nullable=False, default=Rol.vendedor)
+    sucursal_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     activo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     fecha_creacion: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

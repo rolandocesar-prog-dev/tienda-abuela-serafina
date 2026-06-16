@@ -1,0 +1,79 @@
+.rpt-stat-card {
+    background: #fff;
+    border: 1px solid #ede8df;
+    border-radius: 12px;
+    padding: 1.2rem 1rem;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+
+.rpt-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto .75rem;
+    font-size: 1.3rem;
+}
+
+.rpt-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d2013;
+    line-height: 1.1;
+}
+
+.rpt-stat-label {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: .25rem;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+
+.rpt-card {
+    background: #fff;
+    border: 1px solid #ede8df;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+
+.rpt-card-title {
+    font-weight: 600;
+    color: #2d2013;
+    margin-bottom: 1rem;
+    font-size: .95rem;
+}
+
+#reportes-tabs .nav-link {
+    color: #6c757d;
+    border-radius: 8px;
+    font-size: .875rem;
+    font-weight: 500;
+    padding: .4rem .9rem;
+}
+
+#reportes-tabs .nav-link.active {
+    background: #5c3d1e;
+    color: #fff;
+}
+
+.badge-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: .75rem;
+    font-weight: 700;
+    background: #f0ebe1;
+    color: #5c3d1e;
+}
+
+.badge-rank.top1 { background: #ffd700; color: #7a5c00; }
+.badge-rank.top2 { background: #c0c0c0; color: #555; }
+.badge-rank.top3 { background: #cd7f32; color: #fff; }

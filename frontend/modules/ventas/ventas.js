@@ -12,15 +12,14 @@
     // Función principal de inicialización
     window.initVentas = async function() {
         console.log("🛒 Iniciando módulo de Ventas...");
-        
+
         mostrarLoading();
-        
-        await Promise.all([
-            cargarAgencias(),
-            cargarProductos(),
-            cargarEstadisticas()
-        ]);
-        
+
+        // Agencias primero: el Vendedor necesita su sucursal pre-seleccionada
+        // antes de que renderizarProductos filtre el stock por agencia_id
+        await cargarAgencias();
+        await Promise.all([cargarProductos(), cargarEstadisticas()]);
+
         configurarEventos();
     };
     
@@ -35,19 +34,39 @@
     }
     
     /**
-     * Cargar agencias
+     * Cargar agencias/sucursales.
+     * Si el usuario es Vendedor, pre-selecciona su sucursal y bloquea el selector.
      */
     async function cargarAgencias() {
         try {
             agenciasVentas = await window.api('/inventory/agencias');
             const select = document.getElementById('agencia_id');
-            if (select) {
-                select.innerHTML = '<option value="">Seleccionar agencia...</option>' + 
+            if (!select) return;
+
+            const user = window.currentUser;
+            const esVendedor = user?.rol === 'Vendedor';
+            const sucursalId = user?.sucursal_id;
+
+            if (esVendedor && sucursalId) {
+                // Mostrar solo la sucursal del vendedor
+                const suSucursal = agenciasVentas.find(a => a.id === sucursalId);
+                if (suSucursal) {
+                    select.innerHTML = `<option value="${suSucursal.id}">${escapeHtmlVentas(suSucursal.nombre)}</option>`;
+                    select.value = suSucursal.id;
+                    select.disabled = true;
+                } else {
+                    select.innerHTML = '<option value="">Sucursal no encontrada</option>';
+                    window.mostrarNotificacion('Tu sucursal asignada no está disponible', 'error');
+                }
+            } else {
+                // Admin: ver todas
+                select.innerHTML = '<option value="">Seleccionar sucursal...</option>' +
                     agenciasVentas.map(a => `<option value="${a.id}">${escapeHtmlVentas(a.nombre)}</option>`).join('');
+                select.disabled = false;
             }
         } catch (error) {
             console.error("Error cargando agencias:", error);
-            window.mostrarNotificacion('Error cargando agencias: ' + error.message, 'error');
+            window.mostrarNotificacion('Error cargando sucursales: ' + error.message, 'error');
         }
     }
     
@@ -107,7 +126,7 @@
         }
         
         if (!agenciaId) {
-            container.innerHTML = '<div class="text-center py-4 text-warning">⚠️ Seleccione una agencia para ver el stock disponible</div>';
+            container.innerHTML = '<div class="text-center py-4 text-warning">⚠️ Seleccione una sucursal para ver el stock disponible</div>';
             return;
         }
         
@@ -151,12 +170,12 @@
         const agenciaId = document.getElementById('agencia_id')?.value;
         
         if (!agenciaId) {
-            window.mostrarNotificacion('⚠️ Primero seleccione una agencia', 'warning');
+            window.mostrarNotificacion('⚠️ Primero seleccione una sucursal', 'warning');
             return;
         }
         
         if (stockDisponible <= 0) {
-            window.mostrarNotificacion(`❌ Producto "${nombre}" agotado en esta agencia`, 'error');
+            window.mostrarNotificacion(`❌ Producto "${nombre}" agotado en esta sucursal`, 'error');
             return;
         }
         
@@ -164,7 +183,7 @@
         
         if (itemExistente) {
             if (itemExistente.cantidad + 1 > stockDisponible) {
-                window.mostrarNotificacion(`⚠️ Stock insuficiente. Solo hay ${stockDisponible} unidades en esta agencia`, 'warning');
+                window.mostrarNotificacion(`⚠️ Stock insuficiente. Solo hay ${stockDisponible} unidades en esta sucursal`, 'warning');
                 return;
             }
             itemExistente.cantidad++;
@@ -250,7 +269,7 @@
         }
         
         if (nuevaCantidad > stockDisponible) {
-            window.mostrarNotificacion(`⚠️ Stock insuficiente. Solo hay ${stockDisponible} unidades en esta agencia`, 'warning');
+            window.mostrarNotificacion(`⚠️ Stock insuficiente. Solo hay ${stockDisponible} unidades en esta sucursal`, 'warning');
             return;
         }
         
@@ -326,7 +345,7 @@
         const total = carritoVentas.reduce((sum, i) => sum + (i.cantidad * i.precio_unitario), 0);
         
         if (!agenciaId) {
-            window.mostrarNotificacion('Seleccione una agencia', 'warning');
+            window.mostrarNotificacion('Seleccione una sucursal', 'warning');
             return;
         }
         

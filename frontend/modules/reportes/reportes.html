@@ -1,0 +1,142 @@
+<div class="module-container fade-in">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-bar-chart-fill me-2"></i>Reportes de Ventas</h2>
+            <p class="text-muted mb-0">Resumen consolidado por supermercado y sucursal</p>
+        </div>
+        <button class="btn btn-outline-primary" id="btn-refresh-reportes">
+            <i class="bi bi-arrow-repeat me-1"></i>Actualizar
+        </button>
+    </div>
+
+    <!-- Tabs internos -->
+    <ul class="nav nav-pills mb-4 gap-1" id="reportes-tabs">
+        <li class="nav-item">
+            <button class="nav-link active reportes-tab-btn" data-section="general">
+                <i class="bi bi-globe me-1"></i>General
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link reportes-tab-btn" data-section="supermercado">
+                <i class="bi bi-building me-1"></i>Por Supermercado
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link reportes-tab-btn" data-section="sucursal">
+                <i class="bi bi-shop me-1"></i>Por Sucursal
+            </button>
+        </li>
+    </ul>
+
+    <!-- ── GENERAL ──────────────────────────────────────────── -->
+    <div id="section-general" class="reportes-section">
+        <div class="row g-3 mb-4" id="stats-generales">
+            <div class="col-6 col-md-3">
+                <div class="rpt-stat-card">
+                    <div class="rpt-stat-icon" style="background:rgba(78,115,223,.12);color:#4e73df"><i class="bi bi-cash-stack"></i></div>
+                    <div class="rpt-stat-value" id="gen-total-ingresos">-</div>
+                    <div class="rpt-stat-label">Ingresos Totales</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="rpt-stat-card">
+                    <div class="rpt-stat-icon" style="background:rgba(42,157,143,.12);color:#2a9d8f"><i class="bi bi-receipt"></i></div>
+                    <div class="rpt-stat-value" id="gen-total-ventas">-</div>
+                    <div class="rpt-stat-label">Total Ventas</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="rpt-stat-card">
+                    <div class="rpt-stat-icon" style="background:rgba(231,111,81,.12);color:#e76f51"><i class="bi bi-graph-up-arrow"></i></div>
+                    <div class="rpt-stat-value" id="gen-ticket-promedio">-</div>
+                    <div class="rpt-stat-label">Ticket Promedio</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="rpt-stat-card">
+                    <div class="rpt-stat-icon" style="background:rgba(233,196,106,.18);color:#b48a00"><i class="bi bi-shop-window"></i></div>
+                    <div class="rpt-stat-value" id="gen-sucursales-activas">-</div>
+                    <div class="rpt-stat-label">Sucursales con Ventas</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top productos -->
+        <div class="rpt-card">
+            <h6 class="rpt-card-title"><i class="bi bi-trophy me-2 text-warning"></i>Productos más vendidos</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>#</th><th>Producto</th><th class="text-end">Unidades</th><th class="text-end">Ingresos</th></tr>
+                    </thead>
+                    <tbody id="top-productos-body">
+                        <tr><td colspan="4" class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Ventas recientes -->
+        <div class="rpt-card mt-3">
+            <h6 class="rpt-card-title"><i class="bi bi-clock-history me-2"></i>Últimas ventas</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>Fecha</th><th>Sucursal</th><th>Cliente</th><th class="text-end">Total</th></tr>
+                    </thead>
+                    <tbody id="ventas-recientes-body">
+                        <tr><td colspan="4" class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── POR SUPERMERCADO ──────────────────────────────────── -->
+    <div id="section-supermercado" class="reportes-section d-none">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Supermercado</th>
+                        <th class="text-center">Sucursales</th>
+                        <th class="text-end">N° Ventas</th>
+                        <th class="text-end">Ingresos</th>
+                        <th class="text-end">Ticket Prom.</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-supermercados-body">
+                    <tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── POR SUCURSAL ──────────────────────────────────────── -->
+    <div id="section-sucursal" class="reportes-section d-none">
+        <div class="mb-3">
+            <select id="filter-company-sucursal" class="form-select" style="max-width:300px">
+                <option value="">Todos los supermercados</option>
+            </select>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sucursal</th>
+                        <th>Supermercado</th>
+                        <th>Ciudad</th>
+                        <th class="text-end">N° Ventas</th>
+                        <th class="text-end">Ingresos</th>
+                        <th class="text-end">Ticket Prom.</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-sucursales-body">
+                    <tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

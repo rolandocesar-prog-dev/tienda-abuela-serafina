@@ -17,11 +17,12 @@ from app.config import settings
 _bearer = HTTPBearer(auto_error=False)
 
 
-def create_access_token(sub: str, rol: str) -> str:
+def create_access_token(sub: str, rol: str, sucursal_id: str | None = None) -> str:
     now = datetime.now(tz=timezone.utc)
     payload = {
         "sub": sub,
         "rol": rol,
+        "sucursal_id": sucursal_id,
         "iat": now,
         "exp": now + timedelta(minutes=settings.jwt_expire_minutes),
         "jti": str(uuid.uuid4()),

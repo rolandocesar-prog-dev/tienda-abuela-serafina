@@ -3,6 +3,8 @@
     "use strict";
     
     // Variables privadas del módulo
+    let companiesTransfer = [];
+    let modalTransferencia = null;
     let stockDataAlmacen = [];
     let productosMapAlmacen = new Map();
     let agenciasMapAlmacen = new Map();
@@ -26,7 +28,8 @@
         await Promise.all([
             cargarCatalogosAlmacen(),
             cargarStockAlmacen(),
-            cargarMovimientosRecientesAlmacen()
+            cargarMovimientosRecientesAlmacen(),
+            cargarCompaniesTransfer(),
         ]);
         
         configurarEventosAlmacen();
@@ -718,6 +721,137 @@
         }).join('');
     }
     
+    // ── Transferencia entre sucursales ────────────────────────────────────────
+
+    async function cargarCompaniesTransfer() {
+        try {
+            companiesTransfer = await window.api('/companies');
+            const sel = document.getElementById('transfer-company');
+            if (!sel) return;
+            sel.innerHTML = '<option value="">Seleccionar supermercado...</option>' +
+                companiesTransfer.map(c => `<option value="${c.id}">${escapeHtmlAlmacen(c.nombre)}</option>`).join('');
+        } catch (e) {
+            console.error('Error cargando companies para transfer:', e);
+        }
+    }
+
+    function poblarSucursalesTransfer(companyId) {
+        const selOrigen  = document.getElementById('transfer-origen');
+        const selDestino = document.getElementById('transfer-destino');
+        const company = companiesTransfer.find(c => c.id === companyId);
+        const branches = company?.branches || [];
+
+        if (!branches.length) {
+            selOrigen.innerHTML  = '<option value="">Sin sucursales</option>';
+            selDestino.innerHTML = '<option value="">Sin sucursales</option>';
+            selOrigen.disabled   = true;
+            selDestino.disabled  = true;
+            return;
+        }
+
+        const opts = '<option value="">Seleccionar...</option>' +
+            branches.map(b => `<option value="${b.id}">${escapeHtmlAlmacen(b.nombre)}</option>`).join('');
+        selOrigen.innerHTML  = opts;
+        selDestino.innerHTML = opts;
+        selOrigen.disabled   = false;
+        selDestino.disabled  = false;
+        actualizarStockInfoTransfer();
+    }
+
+    function actualizarStockInfoTransfer() {
+        const origenId   = document.getElementById('transfer-origen')?.value;
+        const productoId = document.getElementById('transfer-producto')?.value;
+        const infoEl     = document.getElementById('transfer-stock-info');
+        const stockEl    = document.getElementById('transfer-stock-actual');
+        if (!infoEl || !stockEl) return;
+
+        if (origenId && productoId) {
+            const entry = stockDataAlmacen.find(
+                s => s.agencia_id === origenId && s.producto_id === productoId
+            );
+            stockEl.textContent = entry ? entry.cantidad : '0';
+            infoEl.classList.remove('d-none');
+        } else {
+            infoEl.classList.add('d-none');
+        }
+    }
+
+    async function ejecutarTransferencia() {
+        const companyId  = document.getElementById('transfer-company').value;
+        const origenId   = document.getElementById('transfer-origen').value;
+        const destinoId  = document.getElementById('transfer-destino').value;
+        const productoId = document.getElementById('transfer-producto').value;
+        const cantidad   = parseInt(document.getElementById('transfer-cantidad').value, 10);
+
+        if (!companyId || !origenId || !destinoId || !productoId || !cantidad) {
+            window.mostrarNotificacion('Complete todos los campos', 'warning');
+            return;
+        }
+        if (origenId === destinoId) {
+            window.mostrarNotificacion('Origen y destino no pueden ser la misma sucursal', 'warning');
+            return;
+        }
+        if (isNaN(cantidad) || cantidad <= 0) {
+            window.mostrarNotificacion('La cantidad debe ser mayor a 0', 'warning');
+            return;
+        }
+
+        const stockEntry = stockDataAlmacen.find(
+            s => s.agencia_id === origenId && s.producto_id === productoId
+        );
+        if (!stockEntry || stockEntry.cantidad < cantidad) {
+            window.mostrarNotificacion('Stock insuficiente en la sucursal origen', 'error');
+            return;
+        }
+
+        const origenNombre  = document.getElementById('transfer-origen').selectedOptions[0].text;
+        const destinoNombre = document.getElementById('transfer-destino').selectedOptions[0].text;
+        const productoNombre = document.getElementById('transfer-producto').selectedOptions[0].text;
+
+        const confirm = await Swal.fire({
+            title: '¿Confirmar transferencia?',
+            html: `
+                <div style="text-align:left;font-size:0.9rem">
+                    <p><b>Producto:</b> ${escapeHtmlAlmacen(productoNombre)}</p>
+                    <p><b>Cantidad:</b> ${cantidad} unidades</p>
+                    <p><b>Origen:</b> ${escapeHtmlAlmacen(origenNombre)}</p>
+                    <p><b>Destino:</b> ${escapeHtmlAlmacen(destinoNombre)}</p>
+                </div>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, transferir',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#2a9d8f',
+        });
+        if (!confirm.isConfirmed) return;
+
+        const btn = document.getElementById('btn-confirmar-transferencia');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Transfiriendo...';
+
+        try {
+            await window.api('/inventory/transfer', {
+                method: 'POST',
+                body: JSON.stringify({
+                    sucursal_origen_id:  origenId,
+                    sucursal_destino_id: destinoId,
+                    producto_id:         productoId,
+                    cantidad,
+                }),
+            });
+
+            bootstrap.Modal.getInstance(document.getElementById('modalTransferencia'))?.hide();
+            window.mostrarNotificacion(`Transferencia completada: ${cantidad} unidades de "${productoNombre}" enviadas a ${escapeHtmlAlmacen(destinoNombre)}`, 'success');
+
+            await Promise.all([cargarStockAlmacen(), cargarMovimientosRecientesAlmacen()]);
+        } catch (e) {
+            window.mostrarNotificacion('Error: ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Transferir';
+        }
+    }
+
     /**
      * Configurar eventos del DOM
      */
@@ -790,6 +924,38 @@
                 modal.show();
             };
         }
+
+        // ── Transferencia ────────────────────────────────────────────────────
+        document.getElementById('btn-abrir-transferencia')?.addEventListener('click', () => {
+            // Poblar productos en el modal
+            const selProducto = document.getElementById('transfer-producto');
+            if (selProducto) {
+                selProducto.innerHTML = '<option value="">Seleccionar producto...</option>' +
+                    Array.from(productosMapAlmacen.entries()).map(([id, p]) =>
+                        `<option value="${id}">${escapeHtmlAlmacen(p.nombre)}</option>`
+                    ).join('');
+            }
+            // Limpiar estado previo
+            document.getElementById('transfer-company').value = '';
+            document.getElementById('transfer-origen').innerHTML  = '<option value="">Seleccionar...</option>';
+            document.getElementById('transfer-destino').innerHTML = '<option value="">Seleccionar...</option>';
+            document.getElementById('transfer-origen').disabled   = true;
+            document.getElementById('transfer-destino').disabled  = true;
+            document.getElementById('transfer-cantidad').value    = '';
+            document.getElementById('transfer-stock-info')?.classList.add('d-none');
+
+            modalTransferencia = new bootstrap.Modal(document.getElementById('modalTransferencia'));
+            modalTransferencia.show();
+        });
+
+        document.getElementById('transfer-company')?.addEventListener('change', e => {
+            poblarSucursalesTransfer(e.target.value);
+        });
+
+        document.getElementById('transfer-origen')?.addEventListener('change', actualizarStockInfoTransfer);
+        document.getElementById('transfer-producto')?.addEventListener('change', actualizarStockInfoTransfer);
+
+        document.getElementById('btn-confirmar-transferencia')?.addEventListener('click', ejecutarTransferencia);
     }
     
     /**

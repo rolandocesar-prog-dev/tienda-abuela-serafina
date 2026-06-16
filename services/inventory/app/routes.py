@@ -88,10 +88,52 @@ class AgenciaOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class SucursalRegister(BaseModel):
+    id: uuid.UUID
+    nombre: str
+
+
 @router.get("/agencias", response_model=list[AgenciaOut])
 async def listar_agencias(db: AsyncSession = Depends(get_db)) -> list[Agencia]:
     result = await db.execute(select(Agencia).order_by(Agencia.nombre))
     return list(result.scalars().all())
+
+
+@router.post("/sucursales", response_model=AgenciaOut, status_code=201)
+async def registrar_sucursal(
+    payload: SucursalRegister,
+    db: AsyncSession = Depends(get_db),
+) -> Agencia:
+    """Llamado por company-service al crear una Branch. Registra la sucursal en inventory."""
+    existente = await db.get(Agencia, payload.id)
+    if existente:
+        return existente
+    count_result = await db.execute(select(func.count(Agencia.id)))
+    count = count_result.scalar_one()
+    codigo = f"S{count + 1:03d}"
+    agencia = Agencia(
+        id=payload.id,
+        sucursal_id=payload.id,
+        nombre=payload.nombre,
+        codigo=codigo,
+    )
+    db.add(agencia)
+    await db.commit()
+    await db.refresh(agencia)
+    logger.info("Sucursal registrada en inventory: %s (%s)", payload.nombre, codigo)
+    return agencia
+
+
+@router.delete("/sucursales/{sucursal_id}", status_code=204)
+async def eliminar_sucursal(
+    sucursal_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Llamado por company-service al eliminar una Branch."""
+    agencia = await db.get(Agencia, sucursal_id)
+    if agencia:
+        await db.delete(agencia)
+        await db.commit()
 
 
 # =========================================================================

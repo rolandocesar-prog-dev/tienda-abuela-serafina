@@ -1,0 +1,51 @@
+.empresa-card {
+    background: var(--cream);
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius-sm);
+    padding: 0.85rem 1rem;
+    transition: var(--transition);
+}
+
+.empresa-card:hover {
+    border-color: var(--brown-light);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-brown {
+    background: var(--brown);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.btn-brown:hover {
+    background: var(--brown-dark);
+    color: #fff;
+}
+
+.bg-teal {
+    background-color: var(--teal) !important;
+}
+
+#empresa-tabs .nav-link {
+    color: var(--brown);
+    border: 1.5px solid var(--cream-dark);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.45rem 1rem;
+    transition: var(--transition);
+}
+
+#empresa-tabs .nav-link.active {
+    background: var(--brown);
+    border-color: var(--brown);
+    color: #fff;
+}
+
+#empresa-tabs .nav-link:hover:not(.active) {
+    background: var(--cream-dark);
+}

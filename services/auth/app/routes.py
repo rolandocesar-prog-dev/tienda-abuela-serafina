@@ -27,12 +27,17 @@ def _verify(plain: str, hashed: str) -> bool:
 
 
 @router.post("/register", response_model=UsuarioOut, status_code=status.HTTP_201_CREATED)
-async def registrar(payload: UsuarioCreate, db: AsyncSession = Depends(get_db)) -> Usuario:
+async def registrar(
+    payload: UsuarioCreate,
+    _: dict = Depends(require_rol("Administrador")),
+    db: AsyncSession = Depends(get_db),
+) -> Usuario:
     user = Usuario(
         username=payload.username,
         email=payload.email,
         password_hash=_hash(payload.password),
         rol=payload.rol,
+        sucursal_id=payload.sucursal_id,
     )
     db.add(user)
     try:
@@ -60,7 +65,11 @@ async def login(payload: LoginIn, db: AsyncSession = Depends(get_db)) -> TokenOu
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token = create_access_token(sub=str(user.id), rol=user.rol.value)
+    token = create_access_token(
+        sub=str(user.id),
+        rol=user.rol.value,
+        sucursal_id=str(user.sucursal_id) if user.sucursal_id else None,
+    )
     return TokenOut(
         access_token=token,
         expires_in=settings.jwt_expire_minutes * 60,
@@ -86,6 +95,25 @@ async def listar_usuarios(
 ) -> list[Usuario]:
     result = await db.execute(select(Usuario).order_by(Usuario.fecha_creacion))
     return list(result.scalars().all())
+
+
+@router.patch("/users/{user_id}", response_model=UsuarioOut)
+async def actualizar_usuario(
+    user_id: uuid.UUID,
+    payload: dict,
+    _: dict = Depends(require_rol("Administrador")),
+    db: AsyncSession = Depends(get_db),
+) -> Usuario:
+    user = await db.get(Usuario, user_id)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+    campos_permitidos = {"activo", "sucursal_id", "rol"}
+    for campo, valor in payload.items():
+        if campo in campos_permitidos:
+            setattr(user, campo, valor)
+    await db.commit()
+    await db.refresh(user)
+    return user
 
 
 @router.patch("/users/{user_id}/desactivar", response_model=UsuarioOut)

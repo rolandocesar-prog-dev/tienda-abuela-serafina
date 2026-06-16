@@ -10,7 +10,8 @@ class UsuarioCreate(BaseModel):
     username: str = Field(min_length=3, max_length=60)
     email: EmailStr
     password: str = Field(min_length=6)
-    rol: Rol = Rol.cajero
+    rol: Rol = Rol.vendedor
+    sucursal_id: uuid.UUID | None = None
 
 
 class UsuarioOut(BaseModel):
@@ -18,6 +19,7 @@ class UsuarioOut(BaseModel):
     username: str
     email: str
     rol: Rol
+    sucursal_id: uuid.UUID | None
     activo: bool
     fecha_creacion: datetime
 
