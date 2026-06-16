@@ -5,7 +5,7 @@ from fastapi import FastAPI
 
 from app.config import settings
 from app.database import init_db
-from app.routes import router
+from app.routes import agencias_router, router
 from app.seed import seed_data
 
 logging.basicConfig(
@@ -38,3 +38,4 @@ async def health() -> dict:
 
 
 app.include_router(router)
+app.include_router(agencias_router)

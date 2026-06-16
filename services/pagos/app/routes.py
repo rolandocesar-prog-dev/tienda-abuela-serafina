@@ -106,6 +106,12 @@ async def crear_pago(payload: PagoCreate, db: AsyncSession = Depends(get_db)) ->
     return PagoOut.model_validate(pago)
 
 
+@router.get("/pagos", response_model=list[PagoOut])
+async def listar_pagos(db: AsyncSession = Depends(get_db)) -> list[Pago]:
+    result = await db.execute(select(Pago).order_by(Pago.fecha.desc()))
+    return list(result.scalars().all())
+
+
 @router.get("/pagos/{pago_id}", response_model=PagoOut)
 async def obtener_pago(pago_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> Pago:
     pago = await db.get(Pago, pago_id)

@@ -7,9 +7,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models import Agencia, Empleado
-from app.schemas import CambioAgencia, EmpleadoCreate, EmpleadoOut, EmpleadoUpdate
+from app.schemas import AgenciaOut, CambioAgencia, EmpleadoCreate, EmpleadoOut, EmpleadoUpdate
 
 router = APIRouter(prefix="/empleados", tags=["rrhh"])
+agencias_router = APIRouter(prefix="/agencias", tags=["agencias"])
+
+
+@agencias_router.get("", response_model=list[AgenciaOut])
+async def listar_agencias(db: AsyncSession = Depends(get_db)) -> list[Agencia]:
+    result = await db.execute(select(Agencia).order_by(Agencia.codigo))
+    return list(result.scalars().all())
 
 
 async def _validar_agencia(db: AsyncSession, agencia_id: uuid.UUID) -> None:

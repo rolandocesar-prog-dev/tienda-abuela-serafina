@@ -97,6 +97,7 @@ async def listar_movimientos(
     agencia_id: uuid.UUID | None = None,
     desde: datetime | None = None,
     hasta: datetime | None = None,
+    limit: int | None = None,
     db: AsyncSession = Depends(get_db),
 ) -> list[Movimiento]:
     stmt = select(Movimiento).order_by(Movimiento.fecha.desc())
@@ -106,5 +107,7 @@ async def listar_movimientos(
         stmt = stmt.where(Movimiento.fecha >= desde)
     if hasta is not None:
         stmt = stmt.where(Movimiento.fecha <= hasta)
+    if limit is not None and limit > 0:
+        stmt = stmt.limit(limit)
     result = await db.execute(stmt)
     return list(result.scalars().all())

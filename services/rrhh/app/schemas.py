@@ -35,3 +35,11 @@ class EmpleadoOut(EmpleadoBase):
 
 class CambioAgencia(BaseModel):
     agencia_id: uuid.UUID
+
+
+class AgenciaOut(BaseModel):
+    id: uuid.UUID
+    sucursal_id: uuid.UUID
+    nombre: str
+    codigo: str
+    model_config = ConfigDict(from_attributes=True)

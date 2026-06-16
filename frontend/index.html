@@ -3,185 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tienda Abuela Serafina</title>
+    <title>Tienda Abuela Serafina - Sistema de Gestión</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <header>
-        <h1>Tienda de la Abuela Serafina</h1>
-        <div class="agencia-selector">
-            <label for="agencia">Agencia activa:</label>
-            <select id="agencia"></select>
-        </div>
-    </header>
 
-    <nav>
-        <button class="tab-btn active" data-tab="productos">Productos</button>
-        <button class="tab-btn" data-tab="venta">Nueva venta</button>
-        <button class="tab-btn" data-tab="compra">Nueva compra</button>
-        <button class="tab-btn" data-tab="empleados">Empleados</button>
-        <button class="tab-btn" data-tab="reportes">Reportes</button>
+    <!-- Barra superior mejorada - SIN selector de agencias -->
+    <nav class="navbar navbar-dark bg-gradient shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold fs-4" href="#">
+                <i class="bi bi-shop me-2"></i>Abuela Serafina
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-white-50 small">
+                    <i class="bi bi-calendar3"></i> <span id="fecha-actual"></span>
+                </div>
+                <button class="btn btn-outline-light btn-sm" id="btn-refresh" title="Recargar módulo">
+                    <i class="bi bi-arrow-repeat"></i>
+                </button>
+            </div>
+        </div>
     </nav>
 
-    <main>
-        <!-- PRODUCTOS -->
-        <section id="tab-productos" class="tab active">
-            <div class="section-head">
-                <h2>Productos</h2>
-                <button class="btn-primary" id="btn-nuevo-producto">+ Nuevo producto</button>
+    <!-- Navegación mejorada -->
+    <nav class="bg-light border-bottom shadow-sm sticky-top">
+        <div class="container-fluid">
+            <div class="d-flex flex-wrap gap-1 py-1">
+                <button class="btn btn-outline-secondary btn-sm tab-btn active" data-tab="catalog">
+                    <i class="bi bi-grid-3x3-gap-fill me-1"></i>Productos
+                </button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="ventas">
+                    <i class="bi bi-cart-fill me-1"></i>Ventas
+                </button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="compras">
+                    <i class="bi bi-truck me-1"></i>Compras
+                </button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="almacen">
+                    <i class="bi bi-box-seam me-1"></i>Almacén
+                </button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="rrhh">
+                    <i class="bi bi-people-fill me-1"></i>RRHH
+                </button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="facturacion">
+                    <i class="bi bi-receipt me-1"></i>Facturación
+                </button>
+                <button class="btn btn-outline-secondary btn-sm tab-btn" data-tab="pagos">
+                    <i class="bi bi-credit-card me-1"></i>Pagos
+                </button>
             </div>
-            <div id="productos-lista" class="grid"></div>
+        </div>
+    </nav>
 
-            <dialog id="dialog-producto">
-                <form id="form-producto">
-                    <h3>Nuevo producto</h3>
-                    <label>Código <input name="codigo" required></label>
-                    <label>Nombre <input name="nombre" required></label>
-                    <label>Categoría <input name="categoria" required></label>
-                    <label>Unidad <input name="unidad_medida" value="unidad" required></label>
-                    <label>Precio base <input name="precio_base" type="number" step="0.01" min="0" required></label>
-                    <label>Descripción <textarea name="descripcion" rows="2"></textarea></label>
-                    <div class="form-actions">
-                        <button type="button" data-close>Cancelar</button>
-                        <button type="submit" class="btn-primary">Crear</button>
-                    </div>
-                </form>
-            </dialog>
-        </section>
-
-        <!-- NUEVA VENTA -->
-        <section id="tab-venta" class="tab">
-            <h2>Nueva venta</h2>
-            <div class="two-col">
-                <div>
-                    <h3>Items</h3>
-                    <div class="row">
-                        <select id="venta-producto" class="grow"></select>
-                        <input id="venta-cantidad" type="number" min="1" value="1" style="width:80px">
-                        <button class="btn-primary" id="venta-agregar">Agregar</button>
-                    </div>
-                    <table id="venta-items">
-                        <thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th><th></th></tr></thead>
-                        <tbody></tbody>
-                        <tfoot><tr><td colspan="3" style="text-align:right"><b>Total:</b></td><td id="venta-total">0.00</td><td></td></tr></tfoot>
-                    </table>
-                </div>
-                <div>
-                    <h3>Cliente y pago</h3>
-                    <label>Nombre cliente <input id="venta-cliente-nombre" placeholder="Opcional"></label>
-                    <label>Documento <input id="venta-cliente-doc" placeholder="Opcional"></label>
-                    <label>Método de pago
-                        <select id="venta-metodo">
-                            <option value="efectivo">Efectivo</option>
-                            <option value="transferencia">Transferencia</option>
-                            <option value="tarjeta">Tarjeta (Stripe)</option>
-                        </select>
-                    </label>
-                    <button class="btn-primary big" id="venta-procesar">Procesar venta</button>
-                    <div id="venta-resultado" class="resultado"></div>
-                </div>
+    <!-- Contenedor principal -->
+    <main id="app-container" class="container-fluid py-4">
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Cargando...</span>
             </div>
-        </section>
-
-        <!-- NUEVA COMPRA -->
-        <section id="tab-compra" class="tab">
-            <h2>Compras</h2>
-            <div class="two-col">
-                <div>
-                    <h3>Nueva orden</h3>
-                    <label>Proveedor
-                        <div class="row">
-                            <select id="compra-proveedor" class="grow"></select>
-                            <button id="btn-nuevo-proveedor">+ Nuevo</button>
-                        </div>
-                    </label>
-                    <div class="row">
-                        <select id="compra-producto" class="grow"></select>
-                        <input id="compra-cantidad" type="number" min="1" value="1" style="width:80px">
-                        <input id="compra-precio" type="number" min="0" step="0.01" placeholder="Precio U." style="width:100px">
-                        <button class="btn-primary" id="compra-agregar">Agregar</button>
-                    </div>
-                    <table id="compra-items">
-                        <thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th><th></th></tr></thead>
-                        <tbody></tbody>
-                        <tfoot><tr><td colspan="3" style="text-align:right"><b>Total:</b></td><td id="compra-total">0.00</td><td></td></tr></tfoot>
-                    </table>
-                    <button class="btn-primary big" id="compra-crear">Crear orden</button>
-                </div>
-                <div>
-                    <h3>Órdenes pendientes</h3>
-                    <div id="ordenes-pendientes" class="lista"></div>
-                </div>
-            </div>
-
-            <dialog id="dialog-proveedor">
-                <form id="form-proveedor">
-                    <h3>Nuevo proveedor</h3>
-                    <label>Nombre <input name="nombre" required></label>
-                    <label>NIT <input name="nit" required></label>
-                    <label>Teléfono <input name="telefono"></label>
-                    <label>Email <input name="email" type="email"></label>
-                    <div class="form-actions">
-                        <button type="button" data-close>Cancelar</button>
-                        <button type="submit" class="btn-primary">Crear</button>
-                    </div>
-                </form>
-            </dialog>
-        </section>
-
-        <!-- EMPLEADOS -->
-        <section id="tab-empleados" class="tab">
-            <div class="section-head">
-                <h2>Empleados</h2>
-                <button class="btn-primary" id="btn-nuevo-empleado">+ Nuevo empleado</button>
-            </div>
-            <label>Filtrar por agencia
-                <select id="empleados-filtro">
-                    <option value="">Todas</option>
-                </select>
-            </label>
-            <table id="empleados-tabla">
-                <thead><tr><th>Apellido, Nombre</th><th>CI</th><th>Cargo</th><th>Salario</th><th>Agencia</th><th>Estado</th><th></th></tr></thead>
-                <tbody></tbody>
-            </table>
-
-            <dialog id="dialog-empleado">
-                <form id="form-empleado">
-                    <h3>Nuevo empleado</h3>
-                    <label>Nombre <input name="nombre" required></label>
-                    <label>Apellido <input name="apellido" required></label>
-                    <label>CI <input name="ci" required></label>
-                    <label>Cargo <input name="cargo" required></label>
-                    <label>Fecha ingreso <input name="fecha_ingreso" type="date" required></label>
-                    <label>Salario <input name="salario" type="number" step="0.01" min="0" required></label>
-                    <label>Agencia <select name="agencia_id" required></select></label>
-                    <div class="form-actions">
-                        <button type="button" data-close>Cancelar</button>
-                        <button type="submit" class="btn-primary">Crear</button>
-                    </div>
-                </form>
-            </dialog>
-        </section>
-
-        <!-- REPORTES -->
-        <section id="tab-reportes" class="tab">
-            <h2>Reportes (de la agencia activa)</h2>
-            <button id="btn-refrescar-reportes">Refrescar</button>
-            <div class="two-col">
-                <div>
-                    <h3>Stock actual</h3>
-                    <div id="reporte-stock" class="lista"></div>
-                </div>
-                <div>
-                    <h3>Ventas recientes</h3>
-                    <div id="reporte-ventas" class="lista"></div>
-                </div>
-            </div>
-        </section>
+            <p class="mt-3 text-muted">Cargando módulo...</p>
+        </div>
     </main>
 
-    <div id="toast"></div>
+    <!-- Toast container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
+            <div class="toast-header">
+                <strong class="me-auto"><i class="bi bi-info-circle-fill"></i> Notificación</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body"></div>
+        </div>
+    </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="modules/api/api.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
