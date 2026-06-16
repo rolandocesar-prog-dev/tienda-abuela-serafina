@@ -441,9 +441,15 @@
      */
     async function cargarEstadisticas() {
         try {
-            const ventas = await window.api('/sales');
-            
-            if (ventas && Array.isArray(ventas)) {
+            const todasLasVentas = await window.api('/sales');
+
+            if (todasLasVentas && Array.isArray(todasLasVentas)) {
+                // Filtrar por la sucursal activa del vendedor
+                const agenciaId = document.getElementById('agencia_id')?.value;
+                const ventas = agenciaId
+                    ? todasLasVentas.filter(v => v.agencia_id === agenciaId)
+                    : todasLasVentas;
+
                 const hoy = new Date().toISOString().split('T')[0];
                 const ventasHoy = ventas.filter(v => v.fecha?.split('T')[0] === hoy);
                 const totalHoy = ventasHoy.reduce((sum, v) => sum + (parseFloat(v.total) || 0), 0);
