@@ -1,29 +1,88 @@
 """
 Publisher de eventos del Inventory Service.
 
-Hoy es un stub que loguea por consola. Cuando el owner de Notification publique
-el contrato del broker en docs/events.md, reemplazar esta función por la real
-(aio-pika o lo que se haya decidido).
+Conecta a RabbitMQ al arrancar (via lifespan en main.py) y publica al exchange
+topic `events` con routing_key = event_type. Ver docs/events.md para el contrato.
 
-Eventos que este servicio debe publicar:
-- InventoryLoaded    — tras procesar un /loadExcel
-- InventoryUpdated   — tras cada /input, /output, /transfer (uno por movimiento)
-- TransferCompleted  — al final de un /transfer exitoso
-- StockLow           — cuando el saldo de un (sucursal, producto) cae bajo UMBRAL
+Si el broker no está disponible cuando se intenta publicar, loguea y sigue —
+la transacción de negocio NO se revierte. Para garantizar entrega usar
+outbox pattern (fuera de alcance para esta entrega).
 """
+import json
 import logging
+import uuid
+from datetime import datetime, timezone
 from typing import Any
+
+import aio_pika
+from aio_pika.abc import AbstractRobustConnection, AbstractExchange
+
+from app.config import settings
 
 logger = logging.getLogger("inventory.events")
 
 UMBRAL_STOCK_BAJO = 10
+SOURCE = "inventory"
+EXCHANGE_NAME = "events"
+
+# Estado del cliente del broker — set en lifespan, limpiado al apagar.
+_connection: AbstractRobustConnection | None = None
+_exchange: AbstractExchange | None = None
+
+
+async def connect() -> None:
+    """Llamado desde el lifespan de FastAPI al iniciar."""
+    global _connection, _exchange
+    _connection = await aio_pika.connect_robust(settings.rabbitmq_url)
+    channel = await _connection.channel()
+    _exchange = await channel.declare_exchange(
+        EXCHANGE_NAME, aio_pika.ExchangeType.TOPIC, durable=True
+    )
+    logger.info("Conectado a broker en %s, exchange=%s", settings.rabbitmq_url, EXCHANGE_NAME)
+
+
+async def disconnect() -> None:
+    """Llamado desde el lifespan de FastAPI al cerrar."""
+    global _connection, _exchange
+    if _connection is not None:
+        await _connection.close()
+    _connection = None
+    _exchange = None
 
 
 async def publish_event(event_type: str, data: dict[str, Any]) -> None:
-    """Stub: por ahora solo loguea. Cuando el broker esté, reemplazar."""
-    logger.info("EVENT %s: %s", event_type, data)
+    """
+    Publica un evento al exchange `events` con routing_key=event_type.
+    Si el broker no está conectado, loguea y sigue (no falla la operación de negocio).
+    """
+    envelope = {
+        "event_type": event_type,
+        "event_id": str(uuid.uuid4()),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "source": SOURCE,
+        "data": data,
+    }
+    body = json.dumps(envelope, default=str).encode("utf-8")
+
+    if _exchange is None:
+        logger.warning("Broker no conectado, no se publica %s: %s", event_type, envelope)
+        return
+
+    try:
+        await _exchange.publish(
+            aio_pika.Message(
+                body=body,
+                content_type="application/json",
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+            ),
+            routing_key=event_type,
+        )
+        logger.info("Publicado %s id=%s", event_type, envelope["event_id"])
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Falló publicación de %s: %s", event_type, exc)
 
 
+# ---------- Helpers semánticos ----------
 async def emit_inventory_updated(
     *,
     tipo_movimiento: str,

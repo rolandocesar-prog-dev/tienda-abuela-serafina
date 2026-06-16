@@ -118,9 +118,11 @@ services:
     build: ./services/inventory
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-inventory:5432/inventory
+      RABBITMQ_URL: ${RABBITMQ_URL}
     ports: ["8002:8000"]
     depends_on:
       db-inventory: { condition: service_healthy }
+      rabbitmq:     { condition: service_healthy }
 
   sales:
     build: ./services/sales
@@ -149,6 +151,7 @@ services:
     ports: ["8005:8000"]
     depends_on:
       db-notification: { condition: service_healthy }
+      rabbitmq:        { condition: service_healthy }
 
   auth:
     build: ./services/auth
@@ -192,15 +195,20 @@ services:
       - gateway
 
   # ---------- Broker (RabbitMQ) ----------
-  # Cuando el owner de Notification lo necesite, descomentar este bloque.
-  # rabbitmq:
-  #   image: rabbitmq:3-management
-  #   ports:
-  #     - "5672:5672"
-  #     - "15672:15672"
-  #   environment:
-  #     RABBITMQ_DEFAULT_USER: guest
-  #     RABBITMQ_DEFAULT_PASS: guest
+  # Management UI: http://localhost:15672 (guest/guest)
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
 
 volumes:
   product-data:

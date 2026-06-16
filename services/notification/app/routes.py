@@ -1,26 +1,45 @@
 """
 Notification Service.
 
-Sin endpoints REST de creación — las notificaciones se generan al consumir
-eventos del broker. Solo expone consultas de auditoría.
+No expone endpoints REST de creación: las notificaciones se generan al
+consumir eventos del broker. Expone solo consultas de auditoría:
+- GET /notifications
+- GET /notifications/{id}
 
-Eventos consumidos (cuando el broker esté listo):
-- SaleCompleted
-- TransferCompleted
-- PointsAssigned
-- PromotionCreated
+Ver consumer.py para la implementación del consumer.
 """
-from fastapi import APIRouter, Depends, HTTPException
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.models import Notification
+from app.schemas import NotificationOut
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 
-# TODO(owner-notification): implementar.
+@router.get("", response_model=list[NotificationOut])
+async def listar_notificaciones(
+    event_type: str | None = None,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+) -> list[Notification]:
+    stmt = select(Notification).order_by(Notification.fecha.desc()).limit(limit)
+    if event_type is not None:
+        stmt = stmt.where(Notification.event_type == event_type)
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
 
 
-@router.get("")
-async def listar_notificaciones(db: AsyncSession = Depends(get_db)) -> list[dict]:
-    raise HTTPException(status_code=501, detail="No implementado")
+@router.get("/{notification_id}", response_model=NotificationOut)
+async def obtener_notificacion(
+    notification_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> Notification:
+    n = await db.get(Notification, notification_id)
+    if n is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notificación no encontrada")
+    return n
