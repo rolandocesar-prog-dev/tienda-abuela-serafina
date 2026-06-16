@@ -52,19 +52,48 @@ git show archive/rolando-dev:services/compras/app/routes.py
 
 ---
 
-## 1. Estado actual y asignación de servicios
+## 1. Asignación del equipo (7 personas)
 
-| Equipo PDF | Servicio (carpeta) | Puerto host | Prefijo gateway | Estado | Owner |
-|---|---|---|---|---|---|
-| Equipo 1 | **product** `services/product/` | 8001 | `/products`, `/categories` | ✅ CRUD funcional. Ampliar: Categorías, Marcas, Código de barras, Estado. Publicar eventos. | _por asignar_ |
-| Equipo 2 | **inventory** `services/inventory/` | 8002 | `/inventory/*` | ⚙️ Stock+movimientos funcionando. Falta: `/inventory/loadExcel`, refactor endpoints según PDF, Kardex, eventos. | _por asignar_ |
-| Equipo 3 | **sales** `services/sales/` | 8003 | `/sales/*` | ⚙️ GET funciona. POST devuelve 501 — reimplementar orquestación (Product + Inventory + Customer). | _por asignar_ |
-| Equipo 4 | **customer** `services/customer/` | 8004 | `/customers/*` | 🆕 Esqueleto. Implementar CRUD + puntos + historial + descuentos + eventos. | _por asignar_ |
-| Equipo 5 | **notification** `services/notification/` | 8005 | `/notifications/*` | 🆕 Esqueleto. Implementar consumidor del broker + endpoint de auditoría. **También arma RabbitMQ en compose.** | _por asignar_ |
-| Compartido | **auth** `services/auth/` | 8006 | `/auth/*` | 🆕 Esqueleto. Implementar JWT + roles (Administrador, Cajero, Supervisor, Gerente) + **middleware compartido para los otros 6**. | _por asignar_ |
-| Compartido | **company** `services/company/` | 8007 | `/companies/*` | 🆕 Esqueleto. CRUD compañías + sucursales + ciudades. **Antes de empezar: consultar al docente si lo provee.** | _por asignar_ |
+| # | Persona | Responsabilidad | Carpeta única que toca | Carga | Cuándo arranca | Nombre del compañero |
+|---|---|---|---|---|---|---|
+| 1 | **Product Service** | CRUD + Categorías + Marcas + Códigos de barras + eventos `ProductCreated/Updated/Deleted` | `services/product/` | Liviana–Media | Inmediato | _llenar_ |
+| 2 | **Inventory Service** | Stock + Excel import + Kardex + transfers + eventos `InventoryLoaded`/`Updated`/`TransferCompleted`/`StockLow` | `services/inventory/` | **Pesada** | Inmediato — empezar primero | _llenar_ |
+| 3 | **Sales Service** | Reimplementar POST + orquestar Product/Inventory/Customer + eventos `Sale*` | `services/sales/` | Media | Inmediato con mocks, integra el miércoles | _llenar_ |
+| 4 | **Customer Service** | CRUD + puntos + historial + descuentos + eventos `Customer*`/`PointsAssigned` | `services/customer/` | Media | Inmediato | _llenar_ |
+| 5 | **Notification + Broker** | Service + setup de RabbitMQ + publicar contrato de eventos en `docs/events.md` | `services/notification/` + bloque `rabbitmq` en `docker-compose.yml` + `docs/events.md` | Liviana + infra crítica | Empieza por el broker (martes AM) | _llenar_ |
+| 6 | **Auth + middleware JWT** | JWT + roles (Administrador, Cajero, Supervisor, Gerente) + snippet del middleware para los demás | `services/auth/` + `docs/jwt-middleware.md` | Media | Inmediato (en paralelo con broker) | _llenar_ |
+| 7 | **Frontend + Company** | **Frontend prioridad (40 pts del rúbric)**; Company es CRUD chico en ratos libres. **Preguntar primero al docente si provee Company.** | `frontend/` + `services/company/` | Pesada + Liviana | Frontend inmediato; Company después | _llenar_ |
 
-Frontend (vale 40 pts en la rúbrica) lo lleva una persona dedicada — ver sección 3.
+### Por qué esta división
+
+- **Inventory tiene su propia persona y empieza primero** — es el servicio con más trabajo (Excel, Kardex, transfers, 4 eventos) y aparece en 4 de los 10 pasos de la demo final.
+- **Notification carga el broker** porque es el principal consumidor de eventos — si lo hace otro, hay un punto de coordinación más.
+- **Auth tiene persona dedicada** porque su middleware bloquea a los otros 6 al final. No puede repartirse.
+- **Frontend tiene persona dedicada** porque vale 40 puntos — más que cualquier otro rubro. Combinarlo con un servicio pesado lo perjudica.
+- **Company se combina con Frontend** porque es el CRUD más chico y la persona del frontend puede hacerlo "entre commits" del UI. Y antes hay que confirmar con el docente.
+
+### Si alguien termina temprano, ayuda con…
+
+| Si termina antes el dueño de... | Que ayude a... |
+|---|---|
+| Product | Frontend (tab de Customer, tab de Notification) |
+| Customer | Notification (consumidores) o Frontend |
+| Auth | Frontend (integrar Bearer JWT en `frontend/modules/api/api.js`) |
+| Cualquiera | Ensayar el flujo de demo del PDF (sección 7) |
+
+### Regla de oro — qué toca cada uno
+
+| Persona | Toca solo | NO toca |
+|---|---|---|
+| Product owner | `services/product/` | resto |
+| Inventory owner | `services/inventory/` | resto |
+| Sales owner | `services/sales/` | resto |
+| Customer owner | `services/customer/` | resto |
+| Notification owner | `services/notification/` + bloque rabbitmq en `docker-compose.yml` + `docs/events.md` | resto |
+| Auth owner | `services/auth/` + `docs/jwt-middleware.md` | resto |
+| Frontend+Company owner | `frontend/` + `services/company/` | resto |
+
+`gateway/nginx.conf` y el resto del `docker-compose.yml` los toca **el coordinador** si hace falta. Cualquier necesidad de cambio se avisa primero al grupo.
 
 ---
 
