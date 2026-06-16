@@ -1,0 +1,249 @@
+<div class="module-container fade-in">
+    <!-- Header con estadísticas -->
+    <div class="stats-grid mb-4">
+        <div class="stat-card">
+            <div class="stat-icon">📦</div>
+            <div class="stat-value" id="total-productos">-</div>
+            <div class="stat-label">Total Productos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🏷️</div>
+            <div class="stat-value" id="total-categorias">-</div>
+            <div class="stat-label">Categorías</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value" id="valor-inventario">-</div>
+            <div class="stat-label">Valor Inventario</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-value" id="precio-promedio">-</div>
+            <div class="stat-label">Precio Promedio</div>
+        </div>
+    </div>
+
+    <!-- Barra de acciones -->
+    <div class="actions-bar mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h3 class="mb-0">
+                <i class="bi bi-grid-3x3-gap-fill me-2"></i>Catálogo de Productos
+            </h3>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary" id="btn-toggle-view" title="Cambiar vista">
+                    <i class="bi bi-grid-3x3-gap-fill"></i> <span id="view-text">Tarjetas</span>
+                </button>
+                <button class="btn btn-primary" id="btn-nuevo-producto">
+                    <i class="bi bi-plus-lg me-1"></i>Nuevo Producto
+                </button>
+                <button class="btn btn-outline-primary" id="btn-actualizar">
+                    <i class="bi bi-arrow-repeat"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="filters-bar mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label-sm">🔍 Buscar</label>
+                <input type="text" id="buscador" class="form-control" placeholder="Nombre o SKU...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-sm">📂 Categoría</label>
+                <select id="filtro-categoria" class="form-select">
+                    <option value="todas">Todas las categorías</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-sm">💰 Rango de precio</label>
+                <select id="filtro-precio" class="form-select">
+                    <option value="todos">Todos los precios</option>
+                    <option value="0-50">Hasta Bs. 50</option>
+                    <option value="50-100">Bs. 50 - 100</option>
+                    <option value="100-200">Bs. 100 - 200</option>
+                    <option value="200+">Más de Bs. 200</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" id="limpiar-filtros">
+                    <i class="bi bi-eraser"></i> Limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista de Tarjetas (por defecto) -->
+    <div id="vista-tarjetas" class="row g-4">
+        <!-- Las tarjetas se renderizan aquí -->
+    </div>
+
+    <!-- Vista de Tabla (alternativa) -->
+    <div id="vista-tabla" class="table-responsive d-none">
+        <table class="table table-catalog table-hover">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Unidad</th>
+                    <th>Precio</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-productos"></tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <div id="pagination-container" class="mt-4 d-flex justify-content-center"></div>
+</div>
+
+<!-- Modal para crear/editar producto (VERSIÓN MEJORADA) -->
+<div class="modal fade" id="modalProducto" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-box-seam me-2"></i>
+                    <span id="modal-titulo">Nuevo Producto</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-producto">
+                    <input type="hidden" id="producto-id">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Código (SKU) *</label>
+                            <input type="text" id="prod-codigo" class="form-control" placeholder="Ej: PROD-001" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre *</label>
+                            <input type="text" id="prod-nombre" class="form-control" placeholder="Ej: Arroz Extra" required>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Categoría *</label>
+                            <div class="input-group">
+                                <select id="prod-categoria" class="form-select" required>
+                                    <option value="">Seleccionar o crear categoría...</option>
+                                </select>
+                                <button class="btn btn-outline-primary" type="button" id="btn-nueva-categoria" title="Nueva categoría">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Puedes seleccionar una categoría existente o crear una nueva</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Unidad de Medida *</label>
+                            <div class="input-group">
+                                <select id="prod-unidad" class="form-select" required>
+                                    <option value="">Seleccionar unidad...</option>
+                                    <option value="kg">Kilogramo (kg)</option>
+                                    <option value="g">Gramo (g)</option>
+                                    <option value="l">Litro (l)</option>
+                                    <option value="ml">Mililitro (ml)</option>
+                                    <option value="unidad">Unidad</option>
+                                    <option value="docena">Docena</option>
+                                    <option value="paquete">Paquete</option>
+                                </select>
+                                <button class="btn btn-outline-primary" type="button" id="btn-nueva-unidad" title="Nueva unidad">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Precio Base (Bs.) *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Bs.</span>
+                                <input type="number" id="prod-precio" class="form-control" placeholder="0.00" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Stock Inicial</label>
+                            <input type="number" id="prod-stock" class="form-control" placeholder="0" value="0" min="0">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Descripción</label>
+                            <textarea id="prod-desc" class="form-control" rows="3" placeholder="Descripción del producto..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-guardar-producto">
+                    <i class="bi bi-check-circle me-1"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para nueva categoría -->
+<div class="modal fade" id="modalNuevaCategoria" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-tag me-2"></i>Nueva Categoría
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Nombre de la categoría</label>
+                    <input type="text" id="nueva-categoria-nombre" class="form-control" placeholder="Ej: Lácteos, Verduras, Bebidas..." autocomplete="off">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Ícono (opcional)</label>
+                    <select id="nueva-categoria-icono" class="form-select">
+                        <option value="🍔">🍔 Alimentos</option>
+                        <option value="🥤">🥤 Bebidas</option>
+                        <option value="🧹">🧹 Limpieza</option>
+                        <option value="🧴">🧴 Higiene</option>
+                        <option value="🔌">🔌 Electrodomésticos</option>
+                        <option value="📦">📦 Otros</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-guardar-categoria">
+                    <i class="bi bi-plus-circle me-1"></i> Crear categoría
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para nueva unidad -->
+<div class="modal fade" id="modalNuevaUnidad" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-rulers me-2"></i>Nueva Unidad de Medida
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Nombre de la unidad</label>
+                    <input type="text" id="nueva-unidad-nombre" class="form-control" placeholder="Ej: Lata, Botella, Bolsa, Caja..." autocomplete="off">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Abreviatura (opcional)</label>
+                    <input type="text" id="nueva-unidad-abrev" class="form-control" placeholder="Ej: lt, kg, und">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-guardar-unidad">
+                    <i class="bi bi-plus-circle me-1"></i> Crear unidad
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
