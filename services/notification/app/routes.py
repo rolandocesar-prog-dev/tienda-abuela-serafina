@@ -17,8 +17,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models import Notification
 from app.schemas import NotificationOut
+from app.security import verify_jwt
 
-router = APIRouter(prefix="/notifications", tags=["notifications"])
+router = APIRouter(prefix="/notifications", tags=["notifications"], dependencies=[Depends(verify_jwt)])
 
 
 @router.get("", response_model=list[NotificationOut])

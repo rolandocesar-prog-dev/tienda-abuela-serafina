@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from app.config import settings
 from app.database import init_db
+from app.events import connect as connect_broker, disconnect as disconnect_broker
 from app.routes import router
 
 logging.basicConfig(
@@ -18,8 +19,13 @@ logger = logging.getLogger(settings.service_name)
 async def lifespan(app: FastAPI):
     logger.info("Iniciando servicio %s", settings.service_name)
     await init_db()
+    try:
+        await connect_broker()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("No se pudo conectar al broker (%s). El servicio continúa sin async.", exc)
     logger.info("Servicio %s listo", settings.service_name)
     yield
+    await disconnect_broker()
     logger.info("Cerrando servicio %s", settings.service_name)
 
 

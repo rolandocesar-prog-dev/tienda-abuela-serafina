@@ -20,15 +20,41 @@ la columna `agencia_id` como ID de sucursal. Si la decisión cambia, hay que
 renombrar la columna en models.py y actualizar el frontend.
 """
 import io
+import logging
 import uuid
 from datetime import datetime
 
+import httpx
 import pandas as pd
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.database import get_db
+
+logger = logging.getLogger("inventory.routes")
+
+
+async def _resolver_producto_id(codigo: str) -> uuid.UUID:
+    """
+    Resuelve el UUID de un producto por su código consultando Product Service.
+    Si el servicio no responde o el producto no existe, retorna un UUIDv5
+    determinista como fallback para no abortar la carga masiva.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get(
+                f"{settings.product_url}/products",
+                params={"codigo": codigo},
+            )
+            if resp.status_code == 200:
+                items = resp.json()
+                if items:
+                    return uuid.UUID(items[0]["id"])
+    except Exception:  # noqa: BLE001
+        logger.warning("Product Service no disponible al resolver código '%s', usando uuid5 fallback", codigo)
+    return uuid.uuid5(uuid.NAMESPACE_URL, f"producto/{codigo}")
 from app.events import (
     emit_inventory_loaded,
     emit_inventory_updated,
@@ -47,8 +73,9 @@ from app.schemas import (
     TransferIn,
     TransferOut,
 )
+from app.security import verify_jwt
 
-router = APIRouter(prefix="/inventory", tags=["inventory"])
+router = APIRouter(prefix="/inventory", tags=["inventory"], dependencies=[Depends(verify_jwt)])
 
 
 # =========================================================================
@@ -330,11 +357,7 @@ async def cargar_inventario_excel(
             if agencia_id is None:
                 raise ValueError(f"sucursal '{codigo_sucursal}' no existe")
 
-            # NOTA: el producto_id real lo tendría que resolver Product Service.
-            # Acá usamos UUIDv5 estable a partir del codigo como placeholder
-            # determinista. El owner de inventory lo cambia cuando Product
-            # exponga /products?codigo=X.
-            producto_id = uuid.uuid5(uuid.NAMESPACE_URL, f"producto/{codigo_producto}")
+            producto_id = await _resolver_producto_id(codigo_producto)
 
             referencia = (
                 f"excel:{file.filename}:fila{idx + 2}"
