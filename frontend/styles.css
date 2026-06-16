@@ -14,6 +14,7 @@
     --cream:       #faf7f2;
     --cream-dark:  #f0ebe1;
     --graphite:    #1e2a35;
+    --surface:     #253545;
     --muted:       #64748b;
     --border:      rgba(0,0,0,0.08);
     --shadow-sm:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
@@ -30,10 +31,7 @@
 
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background-color: var(--cream);
-    background-image:
-        radial-gradient(ellipse at 20% 50%, rgba(107,66,38,0.04) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, rgba(42,157,143,0.04) 0%, transparent 50%);
+    background-color: var(--graphite);
     min-height: 100vh;
     color: var(--graphite);
 }
@@ -46,8 +44,8 @@ body {
     justify-content: center;
     padding: 2rem 1rem;
     background:
-        radial-gradient(ellipse at 20% 40%, rgba(107,66,38,0.08) 0%, transparent 55%),
-        radial-gradient(ellipse at 80% 70%, rgba(42,157,143,0.07) 0%, transparent 55%);
+        radial-gradient(ellipse at 20% 40%, rgba(107,66,38,0.22) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 70%, rgba(42,157,143,0.18) 0%, transparent 55%);
 }
 
 .login-card {
@@ -397,23 +395,22 @@ body {
 
 /* ===================== CARDS COMUNES ===================== */
 .form-modern {
-    background: #fff;
+    background: var(--surface);
     border-radius: var(--radius-md);
     padding: 1.25rem;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid rgba(107,66,38,0.08);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.07);
 }
 
 .form-modern h5 {
     font-size: 0.92rem;
     font-weight: 700;
-    color: var(--graphite);
+    color: rgba(255,255,255,0.92);
     display: flex;
     align-items: center;
     gap: 0.4rem;
 }
 
-.form-modern .form-label,
 .form-label-sm {
     font-size: 0.72rem;
     font-weight: 700;
@@ -422,6 +419,11 @@ body {
     letter-spacing: 0.6px;
     margin-bottom: 0.35rem;
     display: block;
+}
+
+.form-modern .form-label,
+.form-modern .form-label-sm {
+    color: rgba(255,255,255,0.45);
 }
 
 .form-modern .form-control,
@@ -471,6 +473,23 @@ body {
 
 .table-modern tbody tr:hover, .table-ventas tbody tr:hover {
     background: #faf7f2;
+}
+
+/* Tabla dentro de panel oscuro (ventas carrito) */
+.form-modern .table-ventas {
+    background: transparent;
+}
+.form-modern .table-ventas tbody td {
+    color: rgba(255,255,255,0.82);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.form-modern .table-ventas tbody tr:hover {
+    background: rgba(255,255,255,0.06);
+}
+.form-modern .table-ventas tfoot td {
+    color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.04);
+    border-top: 1px solid rgba(255,255,255,0.1);
 }
 
 /* ===================== STAT CARDS ===================== */

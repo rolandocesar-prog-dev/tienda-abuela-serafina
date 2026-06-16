@@ -1,25 +1,25 @@
-/* Estilos para el módulo de catálogo */
+/* catalog.css — paleta coherente con el sidebar */
 
 .module-container {
-    animation: fadeIn 0.4s ease-out;
     max-width: 1600px;
     margin: 0 auto;
+    padding: 1.5rem 1.5rem 2rem;
+    animation: fadeIn 0.35s ease-out;
 }
 
-/* ========== TARJETAS DE ESTADÍSTICAS ========== */
+/* ========== STAT CARDS ========== */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.1rem;
 }
 
 .stat-card {
     background: white;
-    border-radius: 20px;
+    border-radius: 16px;
     padding: 1.25rem;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    transition: all 0.25s ease;
     position: relative;
     overflow: hidden;
 }
@@ -27,340 +27,219 @@
 .stat-card::before {
     content: '';
     position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(90deg, #667eea, #764ba2);
+    bottom: 0; left: 0;
+    width: 100%; height: 3px;
+    background: linear-gradient(90deg, var(--brown), var(--amber));
     transform: scaleX(0);
-    transition: transform 0.3s ease;
+    transform-origin: left;
+    transition: transform 0.22s ease;
 }
 
-.stat-card:hover::before {
-    transform: scaleX(1);
-}
+.stat-card:hover::before { transform: scaleX(1); }
+.stat-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,0.1); }
 
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-}
-
-.stat-icon {
-    font-size: 2rem;
-    margin-bottom: 0.75rem;
-}
-
-.stat-value {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #2c3e50;
-    line-height: 1;
-    margin-bottom: 0.25rem;
-}
-
-.stat-label {
-    font-size: 0.8rem;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+.stat-icon { font-size: 1.9rem; margin-bottom: 0.65rem; }
+.stat-value { font-size: 1.9rem; font-weight: 700; color: var(--graphite); line-height: 1; margin-bottom: 0.2rem; }
+.stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
 
 /* ========== BARRA DE ACCIONES ========== */
 .actions-bar {
     background: white;
-    border-radius: 16px;
+    border-radius: 14px;
     padding: 1rem 1.25rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+    border: 1px solid rgba(107,66,38,0.07);
 }
 
-.actions-bar h3 {
-    font-size: 1.35rem;
-    font-weight: 600;
-    color: #2c3e50;
-}
+.actions-bar h3 { font-size: 1.2rem; font-weight: 700; color: var(--graphite); }
 
 /* ========== BARRA DE FILTROS ========== */
 .filters-bar {
     background: white;
-    border-radius: 16px;
-    padding: 1.25rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+    border: 1px solid rgba(107,66,38,0.07);
 }
 
 .form-label-sm {
     font-size: 0.7rem;
-    font-weight: 600;
-    color: #6c757d;
+    font-weight: 700;
+    color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 0.25rem;
     display: block;
 }
 
-/* ========== TARJETAS DE PRODUCTOS ========== */
+/* ========== PRODUCT CARDS ========== */
 .product-card {
     background: white;
-    border-radius: 20px;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.07);
+    transition: all 0.25s ease;
     cursor: pointer;
     height: 100%;
+    animation: cardPop 0.28s ease;
 }
 
 .product-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.13);
 }
 
+/* Color base del header (fallback) */
 .product-card-header {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    padding: 1.5rem;
+    background: linear-gradient(135deg, var(--brown-dark), var(--brown-light));
+    padding: 1.4rem;
     text-align: center;
     color: white;
     position: relative;
 }
 
-.product-card-header .product-icon {
-    font-size: 3rem;
-}
+/* Colores por categoría */
+.product-card-header.cat-lacteos      { background: linear-gradient(135deg, #1a6fa8, #2e9dd4); }
+.product-card-header.cat-bebidas      { background: linear-gradient(135deg, var(--teal-dark), var(--teal)); }
+.product-card-header.cat-abarrotes    { background: linear-gradient(135deg, #5d3a1a, #a0673a); }
+.product-card-header.cat-carnes       { background: linear-gradient(135deg, #8b1a1a, #c0392b); }
+.product-card-header.cat-limpieza     { background: linear-gradient(135deg, #1a6b3c, #27ae60); }
+.product-card-header.cat-panaderia    { background: linear-gradient(135deg, #b55a14, var(--amber)); }
+
+.product-card-header .product-icon { font-size: 2.8rem; }
 
 .product-card-badge {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: rgba(255, 255, 255, 0.9);
-    color: #667eea;
-    padding: 0.25rem 0.75rem;
+    top: 0.9rem; right: 0.9rem;
+    background: rgba(255,255,255,0.92);
+    color: var(--brown-dark);
+    padding: 0.2rem 0.7rem;
     border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: bold;
-}
-
-.product-card-body {
-    padding: 1.25rem;
-}
-
-.product-card-title {
-    font-size: 1.1rem;
+    font-size: 0.68rem;
     font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
+    letter-spacing: 0.2px;
 }
 
-.product-card-category {
-    font-size: 0.75rem;
-    color: #6c757d;
-    margin-bottom: 0.5rem;
-}
-
-.product-card-price {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #667eea;
-    margin: 0.75rem 0;
-}
+.product-card-body { padding: 1.1rem 1.15rem; }
+.product-card-title { font-size: 1rem; font-weight: 700; color: var(--graphite); margin-bottom: 0.3rem; }
+.product-card-category { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.5rem; }
+.product-card-price { font-size: 1.4rem; font-weight: 800; color: var(--brown); margin: 0.6rem 0; }
 
 .product-card-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: 1rem;
-    border-top: 1px solid #e9ecef;
+    padding-top: 0.85rem;
+    border-top: 1px solid #f0ebe1;
 }
 
-.product-card-code {
-    font-size: 0.7rem;
-    color: #6c757d;
-    font-family: monospace;
-}
+.product-card-code { font-size: 0.68rem; color: var(--muted); font-family: monospace; }
 
-/* ========== TABLA DE PRODUCTOS ========== */
+/* ========== TABLA ========== */
 .table-catalog {
     background: white;
-    border-radius: 16px;
+    border-radius: 14px;
     overflow: hidden;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
 }
 
-.table-catalog thead {
-    background: linear-gradient(135deg, #2c3e50, #34495e);
-}
+.table-catalog thead { background: var(--graphite); }
 
 .table-catalog thead th {
-    color: white;
+    color: rgba(255,255,255,0.88);
     font-weight: 600;
-    padding: 1rem;
+    padding: 0.9rem 1rem;
     border: none;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .table-catalog tbody td {
-    padding: 0.875rem 1rem;
+    padding: 0.85rem 1rem;
     vertical-align: middle;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f5f0ea;
+    font-size: 0.88rem;
 }
 
-.table-catalog tbody tr:hover {
-    background-color: #f8f9ff;
-}
+.table-catalog tbody tr:hover { background-color: #faf7f2; }
 
-/* ========== BOTONES DE ACCIÓN ========== */
-.btn-action-group {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-}
+/* ========== BOTONES ========== */
+.btn-action-group { display: flex; gap: 0.4rem; justify-content: center; }
 
 .btn-icon {
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    width: 32px; height: 32px;
+    padding: 0; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
     transition: all 0.2s ease;
 }
+.btn-icon:hover { transform: scale(1.1); }
 
-.btn-icon:hover {
-    transform: scale(1.1);
-}
-
-/* ========== MODAL ========== */
-.modal-content {
-    border-radius: 20px;
-    border: none;
-    overflow: hidden;
-}
-
-.modal-header.bg-gradient-primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-}
-
-.modal-header .modal-title {
-    font-weight: 600;
-}
+/* ========== MODAL HEADER ========== */
+.modal-header.bg-gradient-primary { background: linear-gradient(135deg, var(--brown-dark), var(--brown-light)); }
 
 /* ========== PAGINACIÓN ========== */
-.pagination {
-    gap: 0.25rem;
-}
+.pagination { gap: 0.25rem; }
 
 .pagination .page-link {
-    border-radius: 10px;
-    color: #667eea;
+    border-radius: 8px;
+    color: var(--brown);
     border: 1px solid #dee2e6;
-    padding: 0.5rem 0.9rem;
+    padding: 0.45rem 0.85rem;
     transition: all 0.2s ease;
+    font-size: 0.88rem;
 }
 
 .pagination .page-link:hover {
-    background-color: #667eea;
+    background-color: var(--brown);
     color: white;
-    border-color: #667eea;
-    transform: translateY(-2px);
+    border-color: var(--brown);
+    transform: translateY(-1px);
 }
 
 .pagination .active .page-link {
-    background-color: #667eea;
-    border-color: #667eea;
+    background-color: var(--brown);
+    border-color: var(--brown);
     color: white;
+}
+
+/* ========== SCROLLBAR ========== */
+.table-responsive::-webkit-scrollbar { width: 6px; height: 6px; }
+.table-responsive::-webkit-scrollbar-track { background: #f5f0ea; border-radius: 10px; }
+.table-responsive::-webkit-scrollbar-thumb { background: var(--brown-light); border-radius: 10px; }
+
+/* ========== SKELETON ========== */
+.skeleton-card {
+    background: linear-gradient(90deg, #f5f0ea 25%, #ede8df 50%, #f5f0ea 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.4s infinite;
+    border-radius: 16px;
+    height: 260px;
 }
 
 /* ========== ANIMACIONES ========== */
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes cardPop {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
 }
 
-.product-card {
-    animation: cardPop 0.3s ease;
+@keyframes skeleton-loading {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 /* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-    }
-    
-    .stat-card {
-        padding: 1rem;
-    }
-    
-    .stat-value {
-        font-size: 1.5rem;
-    }
-    
-    .stat-icon {
-        font-size: 1.5rem;
-    }
-    
-    .actions-bar h3 {
-        font-size: 1.1rem;
-    }
-    
-    .product-card-header .product-icon {
-        font-size: 2rem;
-    }
-    
-    .product-card-price {
-        font-size: 1.2rem;
-    }
+    .module-container { padding: 1rem 0.75rem 1.5rem; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+    .stat-value { font-size: 1.5rem; }
 }
 
 @media (max-width: 480px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* ========== SCROLLBAR ========== */
-.table-responsive::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-.table-responsive::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-    background: #667eea;
-    border-radius: 10px;
-}
-
-/* ========== SKELETON LOADING ========== */
-.skeleton-card {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: skeleton-loading 1.5s infinite;
-    border-radius: 20px;
-    height: 280px;
-}
-
-@keyframes skeleton-loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    .stats-grid { grid-template-columns: 1fr; }
 }

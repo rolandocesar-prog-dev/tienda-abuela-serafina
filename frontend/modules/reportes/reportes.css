@@ -1,10 +1,30 @@
+/* reportes.css — paleta coherente con el sidebar */
+
+.module-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 1.5rem 1.5rem 2rem;
+    animation: fadeIn 0.35s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
 .rpt-stat-card {
     background: #fff;
-    border: 1px solid #ede8df;
+    border: 1px solid var(--cream-dark);
     border-radius: 12px;
     padding: 1.2rem 1rem;
     text-align: center;
     box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rpt-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(107,66,38,0.1);
 }
 
 .rpt-stat-icon {
@@ -21,13 +41,13 @@
 .rpt-stat-value {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #2d2013;
+    color: var(--graphite);
     line-height: 1.1;
 }
 
 .rpt-stat-label {
     font-size: 0.75rem;
-    color: #888;
+    color: var(--muted);
     margin-top: .25rem;
     text-transform: uppercase;
     letter-spacing: .4px;
@@ -35,7 +55,7 @@
 
 .rpt-card {
     background: #fff;
-    border: 1px solid #ede8df;
+    border: 1px solid var(--cream-dark);
     border-radius: 12px;
     padding: 1.25rem;
     box-shadow: 0 1px 4px rgba(0,0,0,.05);
@@ -43,21 +63,27 @@
 
 .rpt-card-title {
     font-weight: 600;
-    color: #2d2013;
+    color: var(--graphite);
     margin-bottom: 1rem;
     font-size: .95rem;
 }
 
 #reportes-tabs .nav-link {
-    color: #6c757d;
+    color: var(--muted);
     border-radius: 8px;
     font-size: .875rem;
     font-weight: 500;
     padding: .4rem .9rem;
+    transition: all 0.2s ease;
+}
+
+#reportes-tabs .nav-link:hover {
+    color: var(--brown);
+    background: var(--cream-dark);
 }
 
 #reportes-tabs .nav-link.active {
-    background: #5c3d1e;
+    background: var(--brown);
     color: #fff;
 }
 
@@ -70,8 +96,8 @@
     border-radius: 50%;
     font-size: .75rem;
     font-weight: 700;
-    background: #f0ebe1;
-    color: #5c3d1e;
+    background: var(--cream-dark);
+    color: var(--brown);
 }
 
 .badge-rank.top1 { background: #ffd700; color: #7a5c00; }

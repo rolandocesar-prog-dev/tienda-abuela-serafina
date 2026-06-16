@@ -188,8 +188,8 @@ function mostrarLoading(mensaje = "Cargando...") {
     if (!appContainer) return;
     appContainer.innerHTML = `
         <div class="text-center py-5">
-            <div class="spinner-border text-primary" style="width:3rem;height:3rem;" role="status"></div>
-            <p class="mt-3 text-muted">${mensaje}</p>
+            <div class="spinner-border" style="width:3rem;height:3rem;color:var(--amber);" role="status"></div>
+            <p class="mt-3" style="color:rgba(255,255,255,0.55);font-size:0.9rem;">${mensaje}</p>
         </div>`;
 }
 
