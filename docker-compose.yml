@@ -1,173 +1,171 @@
 # ====================================================================
 # Docker Compose — Tienda Abuela Serafina
-# 7 microservicios + 7 Postgres + nginx (gateway) + frontend
+# 7 microservicios (alineados al PDF Practica 3) + 7 Postgres + nginx + frontend
+# Servicios: product, inventory, sales, customer, notification, auth, company
 # ====================================================================
 
 services:
 
   # ---------- Bases de datos (una por servicio) ----------
-  db-catalog:
+  db-product:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: catalog
-    ports: ["${POSTGRES_PORT_CATALOG}:5432"]
-    volumes: ["catalog-data:/var/lib/postgresql/data"]
+      POSTGRES_DB: product
+    ports: ["${POSTGRES_PORT_PRODUCT}:5432"]
+    volumes: ["product-data:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d catalog"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d product"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  db-almacen:
+  db-inventory:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: almacen
-    ports: ["${POSTGRES_PORT_ALMACEN}:5432"]
-    volumes: ["almacen-data:/var/lib/postgresql/data"]
+      POSTGRES_DB: inventory
+    ports: ["${POSTGRES_PORT_INVENTORY}:5432"]
+    volumes: ["inventory-data:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d almacen"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d inventory"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  db-ventas:
+  db-sales:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ventas
-    ports: ["${POSTGRES_PORT_VENTAS}:5432"]
-    volumes: ["ventas-data:/var/lib/postgresql/data"]
+      POSTGRES_DB: sales
+    ports: ["${POSTGRES_PORT_SALES}:5432"]
+    volumes: ["sales-data:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d ventas"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d sales"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  db-compras:
+  db-customer:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: compras
-    ports: ["${POSTGRES_PORT_COMPRAS}:5432"]
-    volumes: ["compras-data:/var/lib/postgresql/data"]
+      POSTGRES_DB: customer
+    ports: ["${POSTGRES_PORT_CUSTOMER}:5432"]
+    volumes: ["customer-data:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d compras"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d customer"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  db-pagos:
+  db-notification:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: pagos
-    ports: ["${POSTGRES_PORT_PAGOS}:5432"]
-    volumes: ["pagos-data:/var/lib/postgresql/data"]
+      POSTGRES_DB: notification
+    ports: ["${POSTGRES_PORT_NOTIFICATION}:5432"]
+    volumes: ["notification-data:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d pagos"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d notification"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  db-facturacion:
+  db-auth:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: facturacion
-    ports: ["${POSTGRES_PORT_FACTURACION}:5432"]
-    volumes: ["facturacion-data:/var/lib/postgresql/data"]
+      POSTGRES_DB: auth
+    ports: ["${POSTGRES_PORT_AUTH}:5432"]
+    volumes: ["auth-data:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d facturacion"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d auth"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  db-rrhh:
+  db-company:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: rrhh
-    ports: ["${POSTGRES_PORT_RRHH}:5432"]
-    volumes: ["rrhh-data:/var/lib/postgresql/data"]
+      POSTGRES_DB: company
+    ports: ["${POSTGRES_PORT_COMPANY}:5432"]
+    volumes: ["company-data:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d rrhh"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d company"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   # ---------- Microservicios ----------
-  catalog:
-    build: ./services/catalog
+  product:
+    build: ./services/product
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-catalog:5432/catalog
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-product:5432/product
     ports: ["8001:8000"]
     depends_on:
-      db-catalog: { condition: service_healthy }
+      db-product: { condition: service_healthy }
 
-  almacen:
-    build: ./services/almacen
+  inventory:
+    build: ./services/inventory
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-almacen:5432/almacen
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-inventory:5432/inventory
     ports: ["8002:8000"]
     depends_on:
-      db-almacen: { condition: service_healthy }
+      db-inventory: { condition: service_healthy }
 
-  ventas:
-    build: ./services/ventas
+  sales:
+    build: ./services/sales
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-ventas:5432/ventas
-      CATALOG_URL: http://catalog:8000
-      ALMACEN_URL: http://almacen:8000
-      PAGOS_URL: http://pagos:8000
-      FACTURACION_URL: http://facturacion:8000
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-sales:5432/sales
+      PRODUCT_URL: http://product:8000
+      INVENTORY_URL: http://inventory:8000
+      CUSTOMER_URL: http://customer:8000
     ports: ["8003:8000"]
     depends_on:
-      db-ventas: { condition: service_healthy }
+      db-sales: { condition: service_healthy }
 
-  compras:
-    build: ./services/compras
+  customer:
+    build: ./services/customer
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-compras:5432/compras
-      ALMACEN_URL: http://almacen:8000
-      PAGOS_URL: http://pagos:8000
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-customer:5432/customer
     ports: ["8004:8000"]
     depends_on:
-      db-compras: { condition: service_healthy }
+      db-customer: { condition: service_healthy }
 
-  pagos:
-    build: ./services/pagos
+  notification:
+    build: ./services/notification
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-pagos:5432/pagos
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-notification:5432/notification
+      RABBITMQ_URL: ${RABBITMQ_URL}
     ports: ["8005:8000"]
     depends_on:
-      db-pagos: { condition: service_healthy }
+      db-notification: { condition: service_healthy }
 
-  facturacion:
-    build: ./services/facturacion
+  auth:
+    build: ./services/auth
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-facturacion:5432/facturacion
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-auth:5432/auth
+      JWT_SECRET: ${JWT_SECRET}
     ports: ["8006:8000"]
     depends_on:
-      db-facturacion: { condition: service_healthy }
+      db-auth: { condition: service_healthy }
 
-  rrhh:
-    build: ./services/rrhh
+  company:
+    build: ./services/company
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-rrhh:5432/rrhh
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-company:5432/company
     ports: ["8007:8000"]
     depends_on:
-      db-rrhh: { condition: service_healthy }
+      db-company: { condition: service_healthy }
 
   # ---------- Gateway ----------
   gateway:
@@ -176,13 +174,13 @@ services:
       - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
     ports: ["8000:80"]
     depends_on:
-      - catalog
-      - almacen
-      - ventas
-      - compras
-      - pagos
-      - facturacion
-      - rrhh
+      - product
+      - inventory
+      - sales
+      - customer
+      - notification
+      - auth
+      - company
 
   # ---------- Frontend ----------
   frontend:
@@ -193,11 +191,22 @@ services:
     depends_on:
       - gateway
 
+  # ---------- Broker (RabbitMQ) ----------
+  # Cuando el owner de Notification lo necesite, descomentar este bloque.
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: guest
+  #     RABBITMQ_DEFAULT_PASS: guest
+
 volumes:
-  catalog-data:
-  almacen-data:
-  ventas-data:
-  compras-data:
-  pagos-data:
-  facturacion-data:
-  rrhh-data:
+  product-data:
+  inventory-data:
+  sales-data:
+  customer-data:
+  notification-data:
+  auth-data:
+  company-data:

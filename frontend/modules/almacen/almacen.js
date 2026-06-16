@@ -74,7 +74,7 @@
     async function cargarCatalogosAlmacen() {
         try {
             const [productos, agencias] = await Promise.all([
-                window.apiWithRetry('/catalog/products', {}, 2),
+                window.apiWithRetry('/products', {}, 2),
                 window.apiWithRetry('/rrhh/agencias', {}, 2)
             ]);
             
@@ -129,7 +129,7 @@
      */
     async function cargarStockAlmacen() {
         try {
-            const data = await window.apiWithRetry('/almacen/stock', {}, 2);
+            const data = await window.apiWithRetry('/inventory/stock', {}, 2);
             
             if (data && Array.isArray(data)) {
                 stockDataAlmacen = data;
@@ -327,7 +327,7 @@
      */
     async function cargarMovimientosRecientesAlmacen() {
         try {
-            const data = await window.apiWithRetry('/almacen/movimientos?limit=50', {}, 2);
+            const data = await window.apiWithRetry('/inventory/movimientos?limit=50', {}, 2);
             
             if (data && Array.isArray(data)) {
                 movimientosAlmacen = data;
@@ -539,7 +539,7 @@
         console.log('📦 Enviando movimiento:', payload);
         
         try {
-            const response = await api('/almacen/movimientos', { 
+            const response = await api('/inventory/movimientos', { 
                 method: 'POST', 
                 body: JSON.stringify(payload) 
             });
@@ -608,7 +608,7 @@
                 motivo: motivo || 'Ajuste manual'
             };
             
-            await api('/almacen/movimientos', { 
+            await api('/inventory/movimientos', { 
                 method: 'POST', 
                 body: JSON.stringify(payload) 
             });
@@ -638,7 +638,7 @@
         tbody.innerHTML = '<td><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm"></div> Cargando...</div></div>';
 
         try {
-            const data = await window.apiWithRetry('/almacen/movimientos?limit=200', {}, 2);
+            const data = await window.apiWithRetry('/inventory/movimientos?limit=200', {}, 2);
             
             if (data && Array.isArray(data)) {
                 window.todosMovimientosAlmacen = data;

@@ -253,7 +253,7 @@ let idEditando = null;
      */
     async function cargarProductos() {
         try {
-            const data = await window.apiWithRetry('/catalog/products', {}, 2);
+            const data = await window.apiWithRetry('/products', {}, 2);
             
             if (data && Array.isArray(data)) {
                 productos = data.map(p => ({
@@ -697,13 +697,13 @@ let idEditando = null;
         
         try {
             if (idEditando) {
-                await api(`/catalog/products/${idEditando}`, {
+                await api(`/products/${idEditando}`, {
                     method: 'PUT',
                     body: JSON.stringify(payload)
                 });
                 window.mostrarNotificacion('Producto actualizado correctamente', 'success');
             } else {
-                await api('/catalog/products', {
+                await api('/products', {
                     method: 'POST',
                     body: JSON.stringify(payload)
                 });
@@ -737,7 +737,7 @@ let idEditando = null;
         
         if (result.isConfirmed) {
             try {
-                await api(`/catalog/products/${id}`, { method: 'DELETE' });
+                await api(`/products/${id}`, { method: 'DELETE' });
                 window.mostrarNotificacion('Producto eliminado correctamente', 'success');
                 await cargarProductos();
             } catch (error) {

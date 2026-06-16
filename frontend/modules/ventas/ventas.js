@@ -57,8 +57,8 @@
     async function cargarProductos() {
         try {
             const [productos, stock] = await Promise.all([
-                window.api('/catalog/products'),
-                window.api('/almacen/stock')
+                window.api('/products'),
+                window.api('/inventory/stock')
             ]);
             
             productosVentas = productos || [];
@@ -384,7 +384,7 @@
         }
         
         try {
-            const response = await window.api('/ventas/ventas', {
+            const response = await window.api('/sales', {
                 method: 'POST',
                 body: JSON.stringify(payload)
             });
@@ -422,7 +422,7 @@
      */
     async function cargarEstadisticas() {
         try {
-            const ventas = await window.api('/ventas/ventas');
+            const ventas = await window.api('/sales');
             
             if (ventas && Array.isArray(ventas)) {
                 const hoy = new Date().toISOString().split('T')[0];
