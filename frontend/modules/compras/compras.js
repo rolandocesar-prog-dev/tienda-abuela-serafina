@@ -788,6 +788,8 @@
      * Recepcionar orden de compra
      */
     window.recepcionarOrden = async (ordenId) => {
+        console.log("📦 Intentando recepcionar orden:", ordenId);
+        
         const confirmacion = await Swal.fire({
             title: '¿Confirmar recepción?',
             html: `
@@ -810,16 +812,21 @@
         if (!confirmacion.isConfirmed) return;
         
         try {
-            await window.api(`/compras/ordenes-compra/${ordenId}/recepcion`, {
+            console.log(`📡 Enviando POST a: /compras/ordenes-compra/${ordenId}/recepcion`);
+            
+            const response = await window.api(`/compras/ordenes-compra/${ordenId}/recepcion`, {
                 method: 'POST',
                 body: JSON.stringify({})
             });
+            
+            console.log("✅ Respuesta:", response);
             
             window.mostrarNotificacion("¡Recepción exitosa! El stock ha sido actualizado.", 'success');
             await window.cargarOrdenes();
             
         } catch (error) {
-            console.error("Error en recepción:", error);
+            console.error("❌ Error en recepción:", error);
+            console.error("❌ Detalle:", error.message);
             window.mostrarNotificacion("Error: " + error.message, 'error');
         }
     };
