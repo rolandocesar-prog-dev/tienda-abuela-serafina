@@ -84,14 +84,17 @@ const LOGIN_HTML = `
 window.mostrarLogin = function () {
     currentModule = null;
     window.currentUser = null;
+    localStorage.removeItem('_app_user');
 
-    // Ocultar barra de tabs y controles de sesión
-    document.getElementById("tab-nav").style.display = "none";
+    // Ocultar sidebar y controles de sesión
+    document.getElementById("sidebar").style.display = "none";
     document.getElementById("btn-logout").style.display = "none";
     document.getElementById("btn-refresh").style.display = "none";
     document.getElementById("usuario-actual").textContent = "";
     const pill = document.getElementById("usuario-actual-pill");
     if (pill) pill.style.display = "none";
+    const sidebarUsername = document.getElementById("sidebar-username");
+    if (sidebarUsername) sidebarUsername.textContent = "—";
 
     // Renderizar página de login
     appContainer.innerHTML = LOGIN_HTML;
@@ -126,6 +129,7 @@ function _adjuntarEventosLogin() {
         try {
             await window.login(username, password);
             window.currentUser = leerUsuarioDeJWT();
+            localStorage.setItem('_app_user', username);
             _mostrarSesion(username);
             configurarTabsSegunRol();
             await cargarModulo(window.esAdmin() ? "catalog" : "ventas");
@@ -147,13 +151,15 @@ function _mostrarSesion(username) {
     // Restaurar padding normal del app-container
     appContainer.style.padding = "";
 
-    // Mostrar barra de tabs y controles
-    document.getElementById("tab-nav").style.display = "";
+    // Mostrar sidebar y controles
+    document.getElementById("sidebar").style.display = "";
     document.getElementById("btn-logout").style.display = "";
     document.getElementById("btn-refresh").style.display = "";
     document.getElementById("usuario-actual").textContent = username;
     const pill = document.getElementById("usuario-actual-pill");
     if (pill) pill.style.display = "flex";
+    const sidebarUsername = document.getElementById("sidebar-username");
+    if (sidebarUsername) sidebarUsername.textContent = username;
 }
 
 // ── Notificaciones ────────────────────────────────────────────────────────────
@@ -284,8 +290,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (window.isAuthenticated()) {
         window.currentUser = leerUsuarioDeJWT();
         try {
+            const stored = localStorage.getItem('_app_user');
             const payload = JSON.parse(atob(window.getToken().split('.')[1]));
-            _mostrarSesion(payload.sub || "Usuario");
+            _mostrarSesion(stored || payload.sub || "Usuario");
         } catch (_) {
             _mostrarSesion("Usuario");
         }
