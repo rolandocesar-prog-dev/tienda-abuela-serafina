@@ -75,7 +75,7 @@
         try {
             const [productos, agencias] = await Promise.all([
                 window.apiWithRetry('/products', {}, 2),
-                window.apiWithRetry('/rrhh/agencias', {}, 2)
+                window.apiWithRetry('/inventory/agencias', {}, 2)
             ]);
             
             if (productos && Array.isArray(productos)) {

@@ -13,7 +13,35 @@
 </head>
 <body>
 
-    <!-- Barra superior mejorada - SIN selector de agencias -->
+    <!-- Modal de Login -->
+    <div class="modal fade" id="modalLogin" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg,#4e73df,#224abe);">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-shop me-2"></i>Abuela Serafina
+                    </h5>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted mb-3">Inicie sesión para continuar</p>
+                    <div id="login-error" class="alert alert-danger d-none"></div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Usuario</label>
+                        <input type="text" id="login-username" class="form-control" placeholder="seed_admin" value="seed_admin">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Contraseña</label>
+                        <input type="password" id="login-password" class="form-control" placeholder="Admin1234!" value="Admin1234!">
+                    </div>
+                    <button id="btn-login" class="btn btn-primary w-100 fw-bold">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Ingresar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra superior -->
     <nav class="navbar navbar-dark bg-gradient shadow-sm">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold fs-4" href="#">
@@ -23,20 +51,21 @@
                 <div class="text-white-50 small">
                     <i class="bi bi-calendar3"></i> <span id="fecha-actual"></span>
                 </div>
+                <span id="usuario-actual" class="text-white-50 small"></span>
                 <button class="btn btn-outline-light btn-sm" id="btn-refresh" title="Recargar módulo">
                     <i class="bi bi-arrow-repeat"></i>
+                </button>
+                <button class="btn btn-outline-warning btn-sm" id="btn-logout" title="Cerrar sesión" style="display:none">
+                    <i class="bi bi-box-arrow-right"></i> Salir
                 </button>
             </div>
         </div>
     </nav>
 
-    <!-- Navegación mejorada -->
+    <!-- Navegación -->
     <nav class="bg-light border-bottom shadow-sm sticky-top">
         <div class="container-fluid">
             <div class="d-flex flex-wrap gap-1 py-1">
-                <!-- Tabs activos en el pivote total. El frontend owner agrega
-                     tabs para Customer y Notification cuando sus owners hayan creado
-                     los modulos en frontend/modules/. -->
                 <button class="btn btn-outline-secondary btn-sm tab-btn active" data-tab="catalog">
                     <i class="bi bi-grid-3x3-gap-fill me-1"></i>Productos
                 </button>

@@ -27,6 +27,7 @@ from datetime import datetime
 import httpx
 import pandas as pd
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -76,6 +77,21 @@ from app.schemas import (
 from app.security import verify_jwt
 
 router = APIRouter(prefix="/inventory", tags=["inventory"], dependencies=[Depends(verify_jwt)])
+
+
+class AgenciaOut(BaseModel):
+    id: uuid.UUID
+    sucursal_id: uuid.UUID
+    nombre: str
+    codigo: str
+
+    model_config = {"from_attributes": True}
+
+
+@router.get("/agencias", response_model=list[AgenciaOut])
+async def listar_agencias(db: AsyncSession = Depends(get_db)) -> list[Agencia]:
+    result = await db.execute(select(Agencia).order_by(Agencia.nombre))
+    return list(result.scalars().all())
 
 
 # =========================================================================

@@ -1,213 +1,194 @@
-// Contenedor principal
+// app.js — Router y bootstrap de la SPA
 const appContainer = document.getElementById("app-container");
 let currentScript = null;
 let currentCss = null;
 let currentModule = null;
 let toastInstance = null;
 let isLoadingModule = false;
+let loginModal = null;
 
-// Verificar que api.js está cargado
+// ── Esperar api.js ────────────────────────────────────────────────────────────
 function esperarApi() {
     return new Promise((resolve) => {
-        if (typeof window.api !== 'undefined' && window.api !== null) {
-            console.log("✅ api.js ya está listo");
-            resolve();
-        } else {
-            console.log("⏳ Esperando que api.js se cargue...");
-            const checkInterval = setInterval(() => {
-                if (typeof window.api !== 'undefined' && window.api !== null) {
-                    clearInterval(checkInterval);
-                    console.log("✅ api.js listo");
-                    resolve();
-                }
-            }, 50);
-        }
+        if (typeof window.api !== "undefined") { resolve(); return; }
+        const id = setInterval(() => {
+            if (typeof window.api !== "undefined") { clearInterval(id); resolve(); }
+        }, 50);
     });
 }
 
-// Inicializar Toast de Bootstrap
-document.addEventListener('DOMContentLoaded', () => {
-    const toastEl = document.getElementById('liveToast');
-    if (toastEl) {
-        toastInstance = new bootstrap.Toast(toastEl);
-    }
-    
-    actualizarFecha();
-    
-    document.getElementById('btn-refresh')?.addEventListener('click', () => {
-        if (currentModule && !isLoadingModule) {
-            cargarModulo(currentModule);
-            mostrarNotificacion('Recargando módulo...', 'info');
-        }
-    });
-    
-    // Iniciar después de esperar API
-    esperarApi().then(() => {
-        cargarModulo("catalog");
-    });
-});
+// ── Login modal ───────────────────────────────────────────────────────────────
+window.mostrarLogin = function() {
+    if (!loginModal) loginModal = new bootstrap.Modal(document.getElementById("modalLogin"));
+    document.getElementById("login-error").classList.add("d-none");
+    loginModal.show();
+    document.getElementById("btn-logout").style.display = "none";
+    document.getElementById("usuario-actual").textContent = "";
+};
 
-// Actualizar fecha
-function actualizarFecha() {
-    const fecha = new Date();
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    const fechaEl = document.getElementById('fecha-actual');
-    if (fechaEl) {
-        fechaEl.textContent = fecha.toLocaleDateString('es-ES', options);
-    }
+function ocultarLogin(username) {
+    loginModal?.hide();
+    document.getElementById("btn-logout").style.display = "";
+    document.getElementById("usuario-actual").textContent = `👤 ${username}`;
 }
 
-// Mostrar notificaciones
-function mostrarNotificacion(mensaje, tipo = 'info') {
+function configurarLogin() {
+    const btn = document.getElementById("btn-login");
+    const usernameEl = document.getElementById("login-username");
+    const passwordEl = document.getElementById("login-password");
+    const errorEl = document.getElementById("login-error");
+
+    async function doLogin() {
+        const username = usernameEl.value.trim();
+        const password = passwordEl.value.trim();
+        if (!username || !password) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Ingresando...';
+        errorEl.classList.add("d-none");
+
+        try {
+            await window.login(username, password);
+            ocultarLogin(username);
+            await cargarModulo("catalog");
+        } catch (err) {
+            errorEl.textContent = err.message;
+            errorEl.classList.remove("d-none");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-1"></i>Ingresar';
+        }
+    }
+
+    btn.addEventListener("click", doLogin);
+    [usernameEl, passwordEl].forEach(el => {
+        el.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+    });
+
+    document.getElementById("btn-logout")?.addEventListener("click", () => {
+        window.logout();
+        currentModule = null;
+    });
+}
+
+// ── Notificaciones ────────────────────────────────────────────────────────────
+function mostrarNotificacion(mensaje, tipo = "info") {
     if (!toastInstance) {
-        if (tipo === 'error') {
-            Swal.fire({
-                title: 'Error',
-                text: mensaje,
-                icon: 'error',
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000
-            });
+        if (tipo === "error") {
+            Swal.fire({ title: "Error", text: mensaje, icon: "error", toast: true,
+                position: "top-end", showConfirmButton: false, timer: 3000 });
         }
         return;
     }
-    
-    const toastBody = document.querySelector('#liveToast .toast-body');
-    const toastHeader = document.querySelector('#liveToast .toast-header strong');
-    
+    const toastBody = document.querySelector("#liveToast .toast-body");
+    const toastHeader = document.querySelector("#liveToast .toast-header strong");
     if (toastBody) toastBody.textContent = mensaje;
-    
     const iconos = {
         success: '<i class="bi bi-check-circle-fill text-success"></i> Éxito',
-        error: '<i class="bi bi-exclamation-triangle-fill text-danger"></i> Error',
+        error:   '<i class="bi bi-exclamation-triangle-fill text-danger"></i> Error',
         warning: '<i class="bi bi-exclamation-circle-fill text-warning"></i> Advertencia',
-        info: '<i class="bi bi-info-circle-fill text-info"></i> Información'
+        info:    '<i class="bi bi-info-circle-fill text-info"></i> Información'
     };
-    
     if (toastHeader) toastHeader.innerHTML = iconos[tipo] || iconos.info;
     toastInstance.show();
 }
 
-// Mostrar loading
-function mostrarLoading(mensaje = 'Cargando...') {
+function mostrarLoading(mensaje = "Cargando...") {
     if (!appContainer) return;
     appContainer.innerHTML = `
         <div class="text-center py-5">
-            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-                <span class="visually-hidden">Cargando...</span>
-            </div>
+            <div class="spinner-border text-primary" style="width:3rem;height:3rem;" role="status"></div>
             <p class="mt-3 text-muted">${mensaje}</p>
-        </div>
-    `;
+        </div>`;
 }
 
-// Cargar módulo
+// ── Cargar módulo ─────────────────────────────────────────────────────────────
 async function cargarModulo(nombre) {
-    if (isLoadingModule) {
-        console.log(`⏳ Ya cargando un módulo, ignorando solicitud para: ${nombre}`);
-        return;
-    }
-    
-    if (currentModule === nombre) {
-        console.log(`📌 Módulo ${nombre} ya está cargado`);
-        return;
-    }
-    
+    if (isLoadingModule) return;
+    if (currentModule === nombre) return;
     isLoadingModule = true;
-    
+
     try {
         currentModule = nombre;
         mostrarLoading(`Cargando módulo ${nombre}...`);
-        
-        // 1. Cargar HTML
-        const htmlResponse = await fetch(`modules/${nombre}/${nombre}.html`);
-        if (!htmlResponse.ok) {
-            throw new Error(`No se encontró ${nombre}.html (${htmlResponse.status})`);
-        }
-        
-        appContainer.innerHTML = await htmlResponse.text();
-        
-        // 2. Cargar CSS
+
+        const htmlResp = await fetch(`modules/${nombre}/${nombre}.html`);
+        if (!htmlResp.ok) throw new Error(`No se encontró ${nombre}.html (${htmlResp.status})`);
+        appContainer.innerHTML = await htmlResp.text();
+
         if (currentCss) currentCss.remove();
         currentCss = document.createElement("link");
         currentCss.rel = "stylesheet";
         currentCss.href = `modules/${nombre}/${nombre}.css`;
         document.head.appendChild(currentCss);
-        
-        // 3. Cargar JS - Remover script anterior
-        if (currentScript) {
-            currentScript.remove();
-            // Esperar un poco para que se limpie
-            await new Promise(r => setTimeout(r, 50));
-        }
-        
+
+        if (currentScript) { currentScript.remove(); await new Promise(r => setTimeout(r, 50)); }
         currentScript = document.createElement("script");
         currentScript.src = `modules/${nombre}/${nombre}.js?v=${Date.now()}`;
-        
+
         currentScript.onload = () => {
-            const initFunction = `init${nombre.charAt(0).toUpperCase()}${nombre.slice(1)}`;
-            if (typeof window[initFunction] === "function") {
-                window[initFunction]();
-                mostrarNotificacion(`✅ Módulo ${nombre} cargado`, 'success');
-            } else {
-                console.warn(`⚠️ Función ${initFunction} no encontrada`);
-                mostrarNotificacion(`Módulo ${nombre} cargado`, 'info');
-            }
+            const fn = `init${nombre.charAt(0).toUpperCase()}${nombre.slice(1)}`;
+            if (typeof window[fn] === "function") window[fn]();
             isLoadingModule = false;
         };
-        
-        currentScript.onerror = () => {
-            throw new Error(`Error cargando el script ${nombre}.js`);
-        };
-        
+        currentScript.onerror = () => { isLoadingModule = false; };
         document.body.appendChild(currentScript);
-        
+
     } catch (error) {
         console.error("Error cargando módulo:", error);
-        mostrarNotificacion(`❌ Error: ${error.message}`, 'error');
+        mostrarNotificacion(`Error: ${error.message}`, "error");
         isLoadingModule = false;
-        if (appContainer) {
-            appContainer.innerHTML = `
-                <div class="alert alert-danger shadow-sm fade-in" role="alert">
-                    <i class="bi bi-exclamation-octagon-fill me-2"></i>
-                    <strong>Error:</strong> No se pudo cargar el módulo "${nombre}"
-                    <hr>
-                    <p class="mb-0">${error.message}</p>
-                    <button class="btn btn-outline-danger mt-3" onclick="location.reload()">
-                        <i class="bi bi-arrow-repeat me-1"></i>Recargar página
-                    </button>
-                </div>
-            `;
-        }
+        appContainer.innerHTML = `
+            <div class="alert alert-danger m-4">
+                <strong>Error:</strong> No se pudo cargar el módulo "${nombre}"<br>
+                <small>${error.message}</small>
+            </div>`;
     }
 }
 
-// Navegación
+// ── Navegación ────────────────────────────────────────────────────────────────
 function iniciarNavegacion() {
-    const tabs = document.querySelectorAll(".tab-btn");
-    tabs.forEach(btn => {
+    document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
             const target = btn.dataset.tab;
             if (!target || currentModule === target) return;
-            
-            tabs.forEach(b => b.classList.remove("active"));
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
-            
             await cargarModulo(target);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: "smooth" });
         });
     });
 }
 
-// Iniciar navegación después de que el DOM esté listo
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', iniciarNavegacion);
-} else {
-    iniciarNavegacion();
-}
+// ── Arranque ──────────────────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", async () => {
+    const toastEl = document.getElementById("liveToast");
+    if (toastEl) toastInstance = new bootstrap.Toast(toastEl);
 
-// Exportar funciones globales
+    const fecha = new Date();
+    const fechaEl = document.getElementById("fecha-actual");
+    if (fechaEl) fechaEl.textContent = fecha.toLocaleDateString("es-ES", { year:"numeric", month:"long", day:"numeric" });
+
+    document.getElementById("btn-refresh")?.addEventListener("click", () => {
+        if (currentModule && !isLoadingModule) {
+            const prev = currentModule; currentModule = null;
+            cargarModulo(prev);
+        }
+    });
+
+    configurarLogin();
+    iniciarNavegacion();
+
+    await esperarApi();
+
+    if (window.isAuthenticated()) {
+        // Token guardado — arrancar directamente
+        document.getElementById("btn-logout").style.display = "";
+        await cargarModulo("catalog");
+    } else {
+        window.mostrarLogin();
+    }
+});
+
 window.mostrarNotificacion = mostrarNotificacion;
 window.mostrarLoading = mostrarLoading;

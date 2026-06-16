@@ -39,7 +39,7 @@
      */
     async function cargarAgencias() {
         try {
-            agenciasVentas = await window.api('/rrhh/agencias');
+            agenciasVentas = await window.api('/inventory/agencias');
             const select = document.getElementById('agencia_id');
             if (select) {
                 select.innerHTML = '<option value="">Seleccionar agencia...</option>' + 
