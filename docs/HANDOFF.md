@@ -122,6 +122,56 @@ git push -u origin feature/<tu-servicio>
 
 ---
 
+## 2.5 Cuidados específicos por servicio (leer **antes** de tocar código)
+
+### Inventory + Sales — herencia de `Agencia` (el esquema anterior)
+Ambos servicios heredan una tabla `Agencia` con seed de 6 agencias en 3 sucursales (ver `services/inventory/app/models.py` y `services/sales/app/models.py`). El PDF habla solo de **sucursales** (responsabilidad de Company Service).
+
+**Decisión a tomar el martes** (Inventory + Sales + Company owners):
+- **A)** Dejar la tabla `Agencia` como sinónimo de "sucursal" — rápido, queda inconsistencia semántica.
+- **B)** Borrar y consumir `/companies/{id}/branches` por REST — limpio, depende de que Company esté funcional.
+
+**No tocar esos modelos** hasta que se tome la decisión, o se va a perder trabajo cuando se elija lo otro.
+
+### Sales — POST depende de 3 servicios upstream
+`POST /sales` necesita llamar a Product, Inventory y Customer. Mientras esos endpoints no estén implementados, el owner de Sales puede:
+1. Implementar `GET /sales` y `GET /sales/{id}` — ya funcionan.
+2. Stubear `POST /sales` con mocks locales (respuestas hardcodeadas en lugar de las llamadas HTTP).
+3. Conectar las llamadas reales el miércoles cuando los upstream respondan.
+
+**No esperar a los demás para empezar** — desarrollar con mocks.
+
+### Auth — middleware compartido
+El owner de Auth **publica primero un snippet** del middleware `verify_jwt` en `docs/jwt-middleware.md` con la firma exacta. Los otros 6 servicios lo importan. **Los demás owners no implementan JWT por su cuenta** — esperan el snippet oficial.
+
+Mientras Auth no esté listo, los demás trabajan sin JWT. Se enchufa al final.
+
+### Notification — el orden importa
+El owner de Notification debe ejecutar **en este orden**:
+1. Descomentar el bloque `rabbitmq:` en `docker-compose.yml`.
+2. `docker compose up rabbitmq -d` y verificar `docker compose logs rabbitmq` que arranca.
+3. Publicar el contrato de evento en `docs/events.md` (formato JSON + nombre exacto de cada exchange/queue).
+4. Recién entonces implementar el consumidor.
+
+Mientras esos 4 pasos no estén, **los otros owners no publican eventos** — los dejan como TODO. Publicar sin broker confirmado obliga a refactorizar.
+
+### Company — preguntar al docente primero
+El PDF dice que Company Service "puede ser proporcionado por el docente". **Antes de gastar tiempo en implementarlo, preguntarle.** Si lo provee, se borra `services/company/` y se actualiza el compose.
+
+---
+
+## 2.6 Puntos de sincronización del equipo (tres decisiones que destraban a todos)
+
+| Decisión | Quién propone | Quién valida | Cuándo | Si no se decide, bloquea a |
+|---|---|---|---|---|
+| Topología del broker (exchange/queue) + estructura del payload de evento | Notification owner | Product, Inventory, Sales, Customer owners | **Martes AM** | Todos los publishers y consumers de eventos |
+| Header + claims + algoritmo + secret del JWT | Auth owner | Todos | **Martes tarde** | Todos al final (no bloquea desarrollo) |
+| Mantener `Agencia` o migrar a Company.branches | Inventory + Sales owners | Company owner | **Martes** | Sales POST orchestration, queries por sucursal |
+
+Cuando alguna se decida, **se documenta** en `docs/events.md`, `docs/jwt-middleware.md` o este HANDOFF respectivamente. No conversaciones de Slack/WhatsApp como única fuente de verdad.
+
+---
+
 ## 3. Frontend (40 pts del rúbric — owner dedicado)
 
 Estado actual:
