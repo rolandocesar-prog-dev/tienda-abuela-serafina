@@ -814,9 +814,9 @@
         try {
             console.log(`📡 Enviando POST a: /compras/ordenes-compra/${ordenId}/recepcion`);
             
+            // 🔥 CORREGIDO: Sin body
             const response = await window.api(`/compras/ordenes-compra/${ordenId}/recepcion`, {
-                method: 'POST',
-                body: JSON.stringify({})
+                method: 'POST'
             });
             
             console.log("✅ Respuesta:", response);

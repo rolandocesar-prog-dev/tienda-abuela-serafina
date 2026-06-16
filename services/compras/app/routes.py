@@ -125,11 +125,19 @@ async def recepcionar_orden(orden_id: uuid.UUID, db: AsyncSession = Depends(get_
                 if stock_response.status_code == 200:
                     stock_data = stock_response.json()
                     stock_actual = stock_data[0].get("cantidad", 0) if stock_data else 0
+
+                    print("================================")
+                    print("AGENCIA ORIGEN:", orden.agencia_origen_id)
+                    print("PRODUCTO:", item.producto_id)
+                    print("STOCK DEVUELTO:", stock_actual)
+                    print("SOLICITADO:", item.cantidad)
+                    print("================================")
+
                     if stock_actual < item.cantidad:
                         raise HTTPException(
                             status_code=400,
                             detail=f"Stock insuficiente. Producto: {item.producto_id}, "
-                                   f"Stock actual: {stock_actual}, Requerido: {item.cantidad}"
+                                f"Stock actual: {stock_actual}, Requerido: {item.cantidad}"
                         )
         
         # 🔥 SEGUNDO: Ahora sí, procesar los movimientos
