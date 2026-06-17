@@ -8,6 +8,7 @@
     let stockVentas = {};
     let agenciasVentas = [];
     let currentSearchTerm = '';
+    let clientesPorNombre = new Map(); // nombre → cliente
     
     // Función principal de inicialización
     window.initVentas = async function() {
@@ -18,10 +19,27 @@
         // Agencias primero: el Vendedor necesita su sucursal pre-seleccionada
         // antes de que renderizarProductos filtre el stock por agencia_id
         await cargarAgencias();
-        await Promise.all([cargarProductos(), cargarEstadisticas()]);
+        await Promise.all([cargarProductos(), cargarEstadisticas(), cargarClientesParaSugerencias()]);
 
         configurarEventos();
     };
+
+    async function cargarClientesParaSugerencias() {
+        try {
+            const clientes = await window.api('/customers?activo=true');
+            if (!Array.isArray(clientes)) return;
+            clientesPorNombre.clear();
+            const datalist = document.getElementById('clientes-sugeridos');
+            if (!datalist) return;
+            const opciones = clientes.map(c => {
+                clientesPorNombre.set(c.nombre, c);
+                return `<option value="${escapeHtmlVentas(c.nombre)}">${escapeHtmlVentas(c.ci_nit)}</option>`;
+            });
+            datalist.innerHTML = opciones.join('');
+        } catch (err) {
+            console.warn('No se pudieron cargar sugerencias de clientes:', err.message);
+        }
+    }
     
     /**
      * Mostrar loading
@@ -211,7 +229,7 @@
         if (!tbody) return;
         
         if (carritoVentas.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay productos en el carrito</div></td>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4" style="color:rgba(255,255,255,0.4)">No hay productos en el carrito</td></tr>';
             if (totalItems) totalItems.textContent = '0 items';
             if (totalVenta) totalVenta.textContent = 'Bs 0.00';
             return;
@@ -226,23 +244,23 @@
             itemCount += item.cantidad;
             
             return `
-                <tr>
-                    <td class="fw-bold">${escapeHtmlVentas(item.producto_nombre)}</div>
-                    <td>
+                <tr style="background:transparent !important">
+                    <td class="fw-bold" style="color:#fff !important;background:transparent !important">${escapeHtmlVentas(item.producto_nombre)}</td>
+                    <td style="color:#fff !important;background:transparent !important">
                         <div class="d-flex align-items-center gap-2">
-                            <button class="btn btn-sm btn-outline-secondary btn-icon" onclick="cambiarCantidadVentas(${index}, -1)">-</button>
-                            <span class="fw-bold" style="min-width: 40px; text-align: center;">${item.cantidad}</span>
-                            <button class="btn btn-sm btn-outline-secondary btn-icon" onclick="cambiarCantidadVentas(${index}, 1)">+</button>
+                            <button class="btn btn-sm btn-outline-light btn-icon" onclick="cambiarCantidadVentas(${index}, -1)">-</button>
+                            <span class="fw-bold" style="min-width:40px;text-align:center;color:#fff">${item.cantidad}</span>
+                            <button class="btn btn-sm btn-outline-light btn-icon" onclick="cambiarCantidadVentas(${index}, 1)">+</button>
                         </div>
-                    </div>
-                    <td>Bs ${item.precio_unitario.toFixed(2)}</div>
-                    <td class="text-primary fw-bold">Bs ${subtotal.toFixed(2)}</div>
-                    <td>
+                    </td>
+                    <td style="color:rgba(255,255,255,0.85) !important;background:transparent !important">Bs ${item.precio_unitario.toFixed(2)}</td>
+                    <td class="fw-bold" style="color:var(--amber) !important;background:transparent !important">Bs ${subtotal.toFixed(2)}</td>
+                    <td style="background:transparent !important">
                         <button class="btn btn-sm btn-outline-danger btn-icon" onclick="eliminarDelCarritoVentas(${index})">
                             <i class="bi bi-trash"></i>
                         </button>
-                    </div>
-                 </div>
+                    </td>
+                </tr>
             `;
         }).join('');
         
@@ -509,6 +527,48 @@
                 carritoVentas = [];
                 actualizarCarrito();
                 renderizarProductos();
+            });
+        }
+
+        // Autocompletar entre nombre ↔ CI cuando hay cliente registrado
+        const inputNit = document.getElementById('cliente-documento');
+        const inputNombre = document.getElementById('cliente-nombre');
+
+        if (inputNombre) {
+            // Cuando el vendedor elige un nombre del datalist, autocompletar el CI
+            inputNombre.addEventListener('input', () => {
+                const nombre = inputNombre.value.trim();
+                const cliente = clientesPorNombre.get(nombre);
+                if (cliente && inputNit) {
+                    inputNit.value = cliente.ci_nit;
+                    const puntos = cliente.puntos_acumulados || 0;
+                    window.mostrarNotificacion(
+                        `✓ ${cliente.nombre}` + (puntos > 0 ? ` — ${puntos} pts acumulados` : ''),
+                        'success'
+                    );
+                }
+            });
+        }
+
+        if (inputNit && inputNombre) {
+            // Inversa: si tipean el CI primero, buscar el nombre
+            inputNit.addEventListener('blur', async () => {
+                const ciNit = inputNit.value.trim();
+                if (!ciNit || inputNombre.value.trim()) return; // si ya hay nombre, no piso
+                try {
+                    const matches = await window.api(`/customers?ci_nit=${encodeURIComponent(ciNit)}`);
+                    if (matches && matches.length > 0) {
+                        const cliente = matches[0];
+                        inputNombre.value = cliente.nombre;
+                        const puntos = cliente.puntos_acumulados || 0;
+                        window.mostrarNotificacion(
+                            `✓ ${cliente.nombre}` + (puntos > 0 ? ` — ${puntos} pts acumulados` : ''),
+                            'success'
+                        );
+                    }
+                } catch (err) {
+                    console.warn('Lookup de cliente falló:', err.message);
+                }
             });
         }
     }

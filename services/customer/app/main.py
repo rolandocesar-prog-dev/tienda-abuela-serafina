@@ -7,6 +7,7 @@ from app.config import settings
 from app.database import init_db
 from app.events import connect as connect_broker, disconnect as disconnect_broker
 from app.routes import router
+from app.seed import seed_clientes
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,6 +20,7 @@ logger = logging.getLogger(settings.service_name)
 async def lifespan(app: FastAPI):
     logger.info("Iniciando servicio %s", settings.service_name)
     await init_db()
+    await seed_clientes()
     try:
         await connect_broker()
     except Exception as exc:  # noqa: BLE001

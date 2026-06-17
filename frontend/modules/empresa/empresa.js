@@ -167,10 +167,13 @@
                                     <td><small>${sucursal ? esc(sucursal.nombre) : (u.rol === 'Administrador' ? '<span class="text-muted">Todas</span>' : '<span class="text-warning">Sin asignar</span>')}</small></td>
                                     <td><span class="badge ${u.activo ? 'bg-success' : 'bg-secondary'}">${u.activo ? 'Activo' : 'Inactivo'}</span></td>
                                     <td>
-                                        ${u.activo && u.rol !== 'Administrador' ? `
-                                        <button class="btn btn-sm btn-outline-danger" onclick="desactivarUsuarioEmpresa('${u.id}')">
+                                        ${u.rol !== 'Administrador' ? (u.activo ? `
+                                        <button class="btn btn-sm btn-outline-danger" onclick="desactivarUsuarioEmpresa('${u.id}')" title="Desactivar">
                                             <i class="bi bi-person-x"></i>
-                                        </button>` : ''}
+                                        </button>` : `
+                                        <button class="btn btn-sm btn-outline-success" onclick="reactivarUsuarioEmpresa('${u.id}')" title="Reactivar">
+                                            <i class="bi bi-person-check"></i>
+                                        </button>`) : ''}
                                     </td>
                                 </tr>`;
                             }).join("")}
@@ -185,6 +188,7 @@
     window.desactivarUsuarioEmpresa = async function (userId) {
         const confirmado = await Swal.fire({
             title: "¿Desactivar usuario?",
+            text: "El vendedor no podrá iniciar sesión hasta que sea reactivado.",
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "Desactivar",
@@ -194,6 +198,28 @@
         try {
             await window.api(`/auth/users/${userId}/desactivar`, { method: "PATCH" });
             window.mostrarNotificacion("Usuario desactivado", "success");
+            await cargarUsuarios();
+        } catch (e) {
+            window.mostrarNotificacion("Error: " + e.message, "error");
+        }
+    };
+
+    window.reactivarUsuarioEmpresa = async function (userId) {
+        const confirmado = await Swal.fire({
+            title: "¿Reactivar usuario?",
+            text: "El vendedor podrá iniciar sesión nuevamente.",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Reactivar",
+            cancelButtonText: "Cancelar",
+        });
+        if (!confirmado.isConfirmed) return;
+        try {
+            await window.api(`/auth/users/${userId}`, {
+                method: "PATCH",
+                body: JSON.stringify({ activo: true }),
+            });
+            window.mostrarNotificacion("Usuario reactivado", "success");
             await cargarUsuarios();
         } catch (e) {
             window.mostrarNotificacion("Error: " + e.message, "error");

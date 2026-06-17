@@ -50,11 +50,17 @@ async def crear_cliente(payload: CustomerCreate, db: AsyncSession = Depends(get_
 @router.get("", response_model=list[CustomerOut])
 async def listar_clientes(
     activo: bool | None = None,
+    ci_nit: str | None = None,
+    q: str | None = None,
     db: AsyncSession = Depends(get_db),
 ) -> list[Customer]:
     stmt = select(Customer).order_by(Customer.nombre)
     if activo is not None:
         stmt = stmt.where(Customer.activo == activo)
+    if ci_nit is not None:
+        stmt = stmt.where(Customer.ci_nit == ci_nit)
+    if q is not None and q.strip():
+        stmt = stmt.where(Customer.nombre.ilike(f"%{q.strip()}%"))
     result = await db.execute(stmt)
     return list(result.scalars().all())
 

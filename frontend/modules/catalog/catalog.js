@@ -637,14 +637,18 @@ let idEditando = null;
         document.getElementById('modal-titulo').textContent = 'Nuevo Producto';
         document.getElementById('form-producto').reset();
         document.getElementById('producto-id').value = '';
-        document.getElementById('prod-codigo').disabled = false;
-        document.getElementById('prod-codigo').value = '';
+        const codigoInput = document.getElementById('prod-codigo');
+        codigoInput.value = '';
+        codigoInput.placeholder = 'Se generará automáticamente';
+        codigoInput.readOnly = true;
+        const hint = document.getElementById('prod-codigo-hint');
+        if (hint) hint.style.display = '';
         document.getElementById('prod-nombre').value = '';
         document.getElementById('prod-categoria').value = '';
         document.getElementById('prod-unidad').value = '';
         document.getElementById('prod-precio').value = '';
         document.getElementById('prod-desc').value = '';
-        
+
         const modal = new bootstrap.Modal(document.getElementById('modalProducto'));
         modal.show();
     }
@@ -655,12 +659,15 @@ let idEditando = null;
     function abrirModalEditar(id) {
         const producto = productos.find(p => p.id === id);
         if (!producto) return;
-        
+
         idEditando = id;
         document.getElementById('modal-titulo').textContent = 'Editar Producto';
         document.getElementById('producto-id').value = producto.id;
-        document.getElementById('prod-codigo').value = producto.codigo || '';
-        document.getElementById('prod-codigo').disabled = true;
+        const codigoInput = document.getElementById('prod-codigo');
+        codigoInput.value = producto.codigo || '';
+        codigoInput.readOnly = true;
+        const hint = document.getElementById('prod-codigo-hint');
+        if (hint) hint.style.display = 'none';
         document.getElementById('prod-nombre').value = producto.nombre || '';
         document.getElementById('prod-categoria').value = producto.categoria || '';
         document.getElementById('prod-unidad').value = producto.unidad_medida || '';
@@ -698,14 +705,18 @@ let idEditando = null;
         }
         
         const payload = {
-            codigo: codigo,
             nombre: nombre,
             categoria: categoria,
             unidad_medida: unidad,
             descripcion: descripcion,
             precio_base: precio
         };
-        
+        // El código se envía solo si el usuario editó uno existente.
+        // Al crear, el backend lo genera correlativo según categoría.
+        if (idEditando && codigo) {
+            payload.codigo = codigo;
+        }
+
         try {
             if (idEditando) {
                 await api(`/products/${idEditando}`, {

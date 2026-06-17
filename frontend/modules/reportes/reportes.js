@@ -290,8 +290,8 @@
                     if (pid === productoId) {
                         transacciones.push({
                             producto: item.producto_nombre || item.nombre || nombreProducto,
-                            cantidad: item.cantidad || 0,
-                            precio: item.precio_unitario || item.precio || 0,
+                            cantidad: parseInt(item.cantidad || 0, 10),
+                            precio: parseFloat(item.precio_unitario || item.precio || 0),
                             subtotal: parseFloat(item.subtotal || 0),
                             metodo: v.metodo_pago || "No especificado"
                         });
@@ -309,7 +309,7 @@
 
         } catch (error) {
             console.error("❌ Error:", error);
-            limpiarVistaInventario("Error al cargar datos del producto");
+            limpiarVistaInventario("Error: " + (error?.message || "desconocido"));
         }
     }
 
@@ -381,7 +381,7 @@
             .reduce((sum, t) => sum + t.subtotal, 0);
         
         const tarjetaTotal = ventasDia.transacciones
-            .filter(t => t.metodo && t.metodo.toLowerCase().includes("tarjeta"))
+            .filter(t => t.metodo && (t.metodo.toLowerCase().includes("tarjeta") || t.metodo.toLowerCase().includes("transfer") || t.metodo.toLowerCase().includes("qr")))
             .reduce((sum, t) => sum + t.subtotal, 0);
 
         document.getElementById("inv-total-ingresos").textContent = `Bs ${ventasDia.total.toFixed(2)}`;
@@ -393,7 +393,7 @@
         const ventasBody = document.getElementById("inv-ventas-body");
         if (ventasBody) {
             const efectivo = ventasDia.transacciones.filter(t => t.metodo && t.metodo.toLowerCase().includes("efectivo"));
-            const tarjeta = ventasDia.transacciones.filter(t => t.metodo && t.metodo.toLowerCase().includes("tarjeta"));
+            const tarjeta = ventasDia.transacciones.filter(t => t.metodo && (t.metodo.toLowerCase().includes("tarjeta") || t.metodo.toLowerCase().includes("transfer") || t.metodo.toLowerCase().includes("qr")));
 
             let html = '';
             

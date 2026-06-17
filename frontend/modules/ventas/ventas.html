@@ -75,7 +75,8 @@
                 <div class="row g-2 mb-3">
                     <div class="col-6">
                         <label class="form-label-sm">Cliente (opcional)</label>
-                        <input type="text" id="cliente-nombre" class="form-control" placeholder="Nombre del cliente">
+                        <input type="text" id="cliente-nombre" class="form-control" placeholder="Nombre del cliente" list="clientes-sugeridos" autocomplete="off">
+                        <datalist id="clientes-sugeridos"></datalist>
                     </div>
                     <div class="col-6">
                         <label class="form-label-sm">NIT/CI (opcional)</label>
@@ -118,7 +119,7 @@
                         <label class="form-label-sm">Método de pago</label>
                         <select id="metodo-pago" class="form-select">
                             <option value="efectivo">💵 Efectivo</option>
-                            <option value="transferencia">🏦 Transferencia / QR</option>
+                            <option value="tarjeta">💳 Tarjeta / QR</option>
                         </select>
                     </div>
                     <div class="col-6">

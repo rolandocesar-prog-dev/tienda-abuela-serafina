@@ -475,21 +475,34 @@ body {
     background: #faf7f2;
 }
 
-/* Tabla dentro de panel oscuro (ventas carrito) */
+/* Tabla dentro de panel oscuro (ventas carrito) — override de Bootstrap */
 .form-modern .table-ventas {
-    background: transparent;
+    background: transparent !important;
+    --bs-table-bg: transparent;
+    --bs-table-color: rgba(255,255,255,0.82);
+    --bs-table-hover-bg: rgba(255,255,255,0.06);
+    --bs-table-hover-color: #fff;
+    --bs-table-striped-bg: rgba(255,255,255,0.03);
+    --bs-table-striped-color: rgba(255,255,255,0.82);
+    --bs-table-border-color: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.82);
+}
+.form-modern .table-ventas thead th {
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.55);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
 }
 .form-modern .table-ventas tbody td {
-    color: rgba(255,255,255,0.82);
+    color: rgba(255,255,255,0.88);
+    background: transparent;
     border-bottom: 1px solid rgba(255,255,255,0.07);
 }
-.form-modern .table-ventas tbody tr:hover {
-    background: rgba(255,255,255,0.06);
-}
-.form-modern .table-ventas tfoot td {
-    color: rgba(255,255,255,0.5);
+.form-modern .table-ventas tbody tr:hover td {
     background: rgba(255,255,255,0.04);
-    border-top: 1px solid rgba(255,255,255,0.1);
 }
 
 /* ===================== STAT CARDS ===================== */

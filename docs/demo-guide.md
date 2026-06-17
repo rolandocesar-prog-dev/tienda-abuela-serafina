@@ -62,8 +62,10 @@ Swagger de cada servicio:
 
 ### 4.2 Tab Productos
 
-- Catálogo pre-cargado: 25 productos en 5 categorías (Lácteos, Bebidas, Limpieza, Panadería, Carnes).
-- Demostrar: crear un producto nuevo, editar precio, importar desde Excel.
+- Catálogo pre-cargado: 25 productos en 5 categorías (Lácteos, Bebidas, Limpieza, Abarrotes, Carnes).
+- Cada categoría tiene un color distintivo en las cards (azul para lácteos, teal para bebidas, café para abarrotes, rojo para carnes, verde para limpieza).
+- Demostrar: **Nuevo Producto** → el campo SKU está bloqueado con "Se generará automáticamente". Elegí categoría "Lácteos", guardá → ves que el código `LAC006` se asigna solo (correlativo por categoría).
+- Editar precio, eliminar.
 
 ### 4.3 Tab Inventario
 
@@ -80,14 +82,20 @@ Swagger de cada servicio:
 
 ### 4.4 Tab Empresa
 
-- Lista de los 3 supermercados con sus 9 sucursales.
-- Demostrar: crear una nueva empresa o sucursal.
+Tiene 3 sub-secciones: **Supermercados**, **Sucursales**, **Usuarios**.
+
+- **Supermercados**: lista de los 3 + posibilidad de crear uno nuevo (ej. "OXXO Bolivia").
+- **Sucursales**: campo Ciudad es un dropdown con las 9 capitales bolivianas + El Alto (no texto libre — garantiza integridad de la data).
+- **Usuarios**: 1 admin + 9 vendedores seedeados. Cada vendedor activo tiene un botón rojo ❌ para desactivar; los desactivados muestran un botón verde ✓ para reactivar. Demostrar el ciclo: desactivar → intentar login con ese vendedor (debe fallar con "Credenciales incorrectas") → reactivar → login OK.
 
 ### 4.5 Tab Reportes
+
+Tiene 4 sub-tabs:
 
 - **General**: totales globales, top 10 productos más vendidos, últimas ventas.
 - **Por Supermercado**: ventas agrupadas por empresa.
 - **Por Sucursal**: filtrar por supermercado, ver cada sucursal.
+- **Inventario**: selector de producto → muestra existencias agrupadas por **Supermercado → Sucursal** (con barras de porcentaje) y abajo un panel "Ventas del Día" desglosado por **Efectivo vs Tarjeta** con totales y tabla de detalle.
 
 *(Al arranque las ventas son 0 — después de la demo del vendedor, volver aquí para mostrar los datos reales.)*
 
@@ -103,12 +111,13 @@ Swagger de cada servicio:
 
 1. El panel **Carrito de Compras** está listo con la sucursal `La Canasta Centro`.
 2. Buscar producto → `Leche Entera PIL 1L` → agregar al carrito (cantidad 2).
-3. Agregar otro: `Pan Marraqueta` → cantidad 3.
-4. Sección **Cliente**: nombre `Ana López`, documento `12345678`.
-5. Click **Procesar Venta** — aparece confirmación con el total.
-6. El panel de estadísticas actualiza: **Ventas Hoy**, **Total Ventas**, **Clientes Hoy**, **Ticket Promedio** — todos filtrados por esta sucursal.
+3. Agregar otro: `Aceite Fino 1L` → cantidad 1.
+4. Sección **Cliente**: empezar a tipear `Juan` → aparecen sugerencias del datalist (50 clientes seedeados). Elegir `Juanito Pérez Mamani` → el campo NIT se autocompleta con `5050505` y aparece toast verde "✓ Juanito Pérez Mamani — 120 pts acumulados". También funciona la inversa: tipear el CI primero → el nombre se completa.
+5. Método de pago: probar tanto **Efectivo** (con monto recibido para ver el cálculo de cambio) como **Tarjeta**.
+6. Click **Confirmar Venta** — aparece modal con resumen y total.
+7. El panel de estadísticas actualiza: **Ventas Hoy**, **Total Ventas**, **Clientes Hoy**, **Ticket Promedio** — todos filtrados por esta sucursal.
 
-> Internamente: `POST /sales` → descuenta stock vía inventory → publica `SaleCompleted` → notification registra la notificación → customer acumula puntos.
+> Internamente: `POST /sales` (con `metodo_pago`) → descuenta stock vía inventory → publica `SaleCompleted` → notification registra la notificación → customer acumula puntos.
 
 ---
 
@@ -144,7 +153,7 @@ docker compose start notification
 docker compose down -v && docker compose up --build -d
 ```
 
-`-v` borra los volúmenes de Postgres. El seed re-crea los 3 supermercados, 9 sucursales, 25 productos, 225 stocks y los 10 usuarios (admin + 9 vendedores) automáticamente.
+`-v` borra los volúmenes de Postgres. El seed re-crea los 3 supermercados, 9 sucursales, 25 productos, 225 stocks, 10 usuarios (admin + 9 vendedores) y 50 clientes automáticamente.
 
 ---
 
@@ -159,18 +168,28 @@ docker compose down -v && docker compose up --build -d
 
 ---
 
-## 8. Checklist de criterios de evaluación
+## 8. Checklist de los 8 puntos del docente
+
+| # | Punto | Cómo demostrarlo |
+|---|---|---|
+| 1 | Registrar nuevo supermercado "OXXO Bolivia" | Empresa → Supermercados → Crear |
+| 2 | Crear sucursales **Prado** y **El Alto** | Empresa → Sucursales → Ciudad = "La Paz" / "El Alto" (dropdown) |
+| 3 | Lote inicial 100 unid del Producto X a Bs 18.50 en Sucursal Prado | Productos → Nuevo (precio 18.50, SKU autogenerado) → Inventario → Registrar Movimiento (entrada, 100, Prado) |
+| 4 | Venta de 2 unid del Producto X a Juanito Pérez | Ventas → seleccionar Producto X (cantidad 2) → tipear "Juanito" → autocompleta CI 5050505 → Efectivo → Confirmar |
+| 5 | Transferir 50 unid Prado → El Alto | Inventario → buscar Producto X → Transferir |
+| 6 | Vender 1 unid a Juanito en sucursal de **otro** supermercado | Ventas (admin) → cambiar sucursal a "Don Pedro Aeropuerto" → vender 1 unid con método **Tarjeta** |
+| 7 | Reporte consolidado de stock del Producto X agrupado por supermercado | Reportes → tab **Inventario** → seleccionar Producto X → ver tabla agrupada por Supermercado → Sucursal |
+| 8 | Reporte ventas del día separando Efectivo / Tarjeta | Reportes → tab **Inventario** → panel "Ventas del Día" con totales separados y tabla de detalle |
+
+## 9. Otros criterios de evaluación
 
 | Criterio | Cómo demostrarlo |
 |---|---|
 | `docker compose up --build` levanta todo | Sección 2 |
 | Los `/health` responden 200 vía gateway | Sección 3 |
 | JWT: login, roles diferenciados | Secciones 4.1 y 4.6 |
-| Admin ve Productos / Inventario / Empresa / Reportes | Secciones 4.2–4.5 |
-| Vendedor ve solo Ventas filtradas por sucursal | Sección 4.7 |
-| Venta E2E (descuenta stock, registra cliente) | Sección 4.7 |
-| Transferencia de stock entre sucursales | Sección 4.3 |
+| Vendedor desactivado no puede hacer login | Empresa → desactivar `canasta.centro` → intentar login → 401 |
 | Eventos RabbitMQ (SaleCompleted → notification) | Validar en http://localhost:15672 (guest/guest) |
-| Datos seed pre-cargados al levantar | Visible en Productos e Inventario sin cargar nada manualmente |
+| Datos seed pre-cargados al levantar | Visible en Productos, Inventario, Empresa y autocomplete de clientes en Ventas sin cargar nada |
 | Independencia de servicios | Sección 5 |
-| Reportes consolidados por nivel | Sección 4.8 |
+| Integridad de datos | SKU autogenerado por categoría, ciudades como dropdown, autocomplete de clientes registrados |
