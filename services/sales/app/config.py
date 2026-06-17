@@ -14,8 +14,11 @@ class Settings(BaseSettings):
     # Timeout (segundos) para llamadas HTTP a otros servicios
     http_timeout: float = 5.0
 
+    rabbitmq_url: str = "amqp://guest:guest@rabbitmq:5672/"
     # IVA aplicado a las ventas. El owner de sales decide si se calcula aquí o no.
     iva_rate: float = 0.13
+    jwt_secret: str = "CHANGE-ME-IN-PROD"
+    jwt_algorithm: str = "HS256"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

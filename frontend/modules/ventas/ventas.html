@@ -1,129 +1,140 @@
 <div class="module-container fade-in">
-    <!-- Header con estadísticas -->
+
+    <!-- Estadísticas -->
     <div class="stats-grid mb-4">
-        <div class="stat-card">
+        <div class="stat-card card-brown">
             <div class="stat-icon">💰</div>
             <div class="stat-value" id="ventas-hoy">-</div>
             <div class="stat-label">Ventas Hoy</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card card-teal">
             <div class="stat-icon">📊</div>
             <div class="stat-value" id="total-ventas">-</div>
             <div class="stat-label">Total Ventas</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card card-coral">
             <div class="stat-icon">👥</div>
             <div class="stat-value" id="clientes-atendidos">-</div>
             <div class="stat-label">Clientes Hoy</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card card-amber">
             <div class="stat-icon">⭐</div>
             <div class="stat-value" id="promedio-venta">-</div>
             <div class="stat-label">Ticket Promedio</div>
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Columna izquierda - Productos y búsqueda -->
+    <div class="row g-3">
+        <!-- Columna izquierda -->
         <div class="col-lg-5">
-            <div class="form-modern mb-4">
+            <!-- Búsqueda + Agencia -->
+            <div class="form-modern mb-3">
                 <h5 class="mb-3">
-                    <i class="bi bi-search me-2"></i>Buscar Producto
+                    <i class="bi bi-search" style="color:var(--brown)"></i>
+                    Buscar Producto
                 </h5>
-                <div class="mb-3">
-                    <input type="text" id="buscador-producto" class="form-control" placeholder="🔍 Buscar por nombre...">
+                <div class="mb-2">
+                    <input type="text" id="buscador-producto" class="form-control" placeholder="Buscar por nombre...">
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Agencia *</label>
+                <div>
+                    <label class="form-label-sm">Sucursal *</label>
                     <select id="agencia_id" class="form-select" required>
-                        <option value="">Seleccionar agencia...</option>
+                        <option value="">Seleccionar sucursal...</option>
                     </select>
                 </div>
             </div>
 
-            <!-- Lista de productos -->
+            <!-- Productos -->
             <div class="form-modern">
                 <h5 class="mb-3">
-                    <i class="bi bi-grid-3x3-gap-fill me-2"></i>Productos Disponibles
+                    <i class="bi bi-grid-3x3-gap-fill" style="color:var(--brown)"></i>
+                    Productos Disponibles
                 </h5>
-                <div class="productos-grid" id="productos-container" style="max-height: 500px; overflow-y: auto;">
+                <div class="productos-grid" id="productos-container" style="max-height:480px;overflow-y:auto;">
                     <div class="text-center py-4">
-                        <div class="spinner-border text-primary"></div>
-                        <p class="mt-2 text-muted">Cargando productos...</p>
+                        <div class="spinner-border" style="color:var(--brown)"></div>
+                        <p class="mt-2" style="font-size:0.82rem;color:rgba(255,255,255,0.45)">Cargando productos...</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Columna derecha - Carrito de compras -->
+        <!-- Columna derecha — Carrito -->
         <div class="col-lg-7">
-            <div class="form-modern">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="form-modern" style="height:100%">
+                <!-- Header carrito -->
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2" style="border-bottom:1.5px solid rgba(255,255,255,0.12)">
                     <h5 class="mb-0">
-                        <i class="bi bi-cart-fill me-2"></i>Carrito de Compras
+                        <i class="bi bi-cart-fill" style="color:var(--brown)"></i>
+                        Carrito de Compras
                     </h5>
-                    <span class="badge bg-primary fs-6" id="total-items">0 items</span>
+                    <span class="badge" style="background:var(--brown);color:#fff;font-size:0.78rem" id="total-items">0 items</span>
                 </div>
 
                 <!-- Datos del cliente -->
                 <div class="row g-2 mb-3">
-                    <div class="col-md-6">
+                    <div class="col-6">
                         <label class="form-label-sm">Cliente (opcional)</label>
                         <input type="text" id="cliente-nombre" class="form-control" placeholder="Nombre del cliente">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-6">
                         <label class="form-label-sm">NIT/CI (opcional)</label>
                         <input type="text" id="cliente-documento" class="form-control" placeholder="NIT o CI">
                     </div>
                 </div>
 
                 <!-- Tabla del carrito -->
-                <div class="table-responsive">
-                    <table class="table table-ventas">
+                <div class="table-responsive mb-3" style="border-radius:var(--radius-sm);overflow:hidden">
+                    <table class="table table-ventas mb-0">
                         <thead>
                             <tr>
                                 <th>Producto</th>
-                                <th>Cantidad</th>
+                                <th style="width:110px">Cantidad</th>
                                 <th>Precio</th>
                                 <th>Subtotal</th>
-                                <th></th>
+                                <th style="width:40px"></th>
                             </tr>
                         </thead>
                         <tbody id="carrito-body">
-                            <tr><td colspan="5" class="text-center py-4 text-muted">No hay productos en el carrito</td></tr>
-                        </tbody>
-                        <tfoot class="table-light">
                             <tr>
-                                <td colspan="3" class="text-end fw-bold">Total:</td>
-                                <td colspan="2" class="fw-bold text-primary fs-5" id="total-venta">Bs 0.00</td>
+                                <td colspan="5" class="text-center py-4" style="color:rgba(255,255,255,0.4);font-size:0.85rem">
+                                    <i class="bi bi-cart3" style="font-size:1.8rem;opacity:0.3;display:block;margin-bottom:6px"></i>
+                                    No hay productos en el carrito
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold" style="font-size:0.85rem;color:rgba(255,255,255,0.5)">Total a pagar:</td>
+                                <td colspan="2" class="fw-bold" style="font-size:1.15rem;color:var(--amber)" id="total-venta">Bs 0.00</td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
 
-                <!-- Método de pago -->
+                <!-- Pago -->
                 <div class="row g-2 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label-sm">Método de Pago</label>
+                    <div class="col-6">
+                        <label class="form-label-sm">Método de pago</label>
                         <select id="metodo-pago" class="form-select">
                             <option value="efectivo">💵 Efectivo</option>
                             <option value="transferencia">🏦 Transferencia / QR</option>
                         </select>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label-sm">Monto Recibido (efectivo)</label>
+                    <div class="col-6">
+                        <label class="form-label-sm">Monto recibido</label>
                         <input type="number" id="monto-recibido" class="form-control" placeholder="0.00" step="0.01">
-                        <small id="cambio-text" class="text-muted"></small>
+                        <small id="cambio-text" style="font-size:0.78rem"></small>
                     </div>
                 </div>
 
-                <!-- Botones de acción -->
-                <div class="d-flex gap-2 mt-3">
-                    <button class="btn btn-success flex-grow-1" id="btn-finalizar-venta">
-                        <i class="bi bi-check-circle me-1"></i> Confirmar Venta
+                <!-- Acciones -->
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success flex-grow-1 py-2" id="btn-finalizar-venta">
+                        <i class="bi bi-check-circle-fill me-1"></i>Confirmar Venta
                     </button>
-                    <button class="btn btn-outline-danger" id="btn-limpiar-carrito">
-                        <i class="bi bi-trash me-1"></i> Limpiar
+                    <button class="btn btn-outline-danger px-3" id="btn-limpiar-carrito">
+                        <i class="bi bi-trash3"></i>
                     </button>
                 </div>
             </div>
@@ -131,28 +142,41 @@
     </div>
 </div>
 
-<!-- Modal para confirmar venta -->
+<!-- Modal confirmar venta -->
 <div class="modal fade" id="modalConfirmarVenta" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-check-circle me-2"></i>Confirmar Venta
+            <div class="modal-header text-white" style="background:linear-gradient(135deg,var(--teal),var(--teal-dark))">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-receipt-cutoff me-2"></i>Confirmar Venta
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="text-center mb-3">
-                    <i class="bi bi-receipt" style="font-size: 3rem;"></i>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div style="width:64px;height:64px;border-radius:50%;background:rgba(42,157,143,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto">
+                        <i class="bi bi-cart-check-fill" style="font-size:1.8rem;color:var(--teal)"></i>
+                    </div>
                 </div>
-                <p><strong>Total:</strong> <span id="confirm-total" class="fw-bold text-primary fs-4"></span></p>
-                <p><strong>Método de Pago:</strong> <span id="confirm-metodo"></span></p>
-                <p><strong>Cliente:</strong> <span id="confirm-cliente">Consumidor Final</span></p>
+                <div style="background:var(--cream);border-radius:var(--radius-sm);padding:1rem;display:flex;flex-direction:column;gap:0.7rem">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span style="font-size:0.82rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Total</span>
+                        <span id="confirm-total" class="fw-bold" style="font-size:1.4rem;color:var(--brown)"></span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span style="font-size:0.82rem;color:var(--muted)">Método de pago</span>
+                        <span id="confirm-metodo" style="font-size:0.88rem;font-weight:600"></span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span style="font-size:0.82rem;color:var(--muted)">Cliente</span>
+                        <span id="confirm-cliente" style="font-size:0.88rem;font-weight:600">Consumidor Final</span>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-success" id="btn-confirmar-venta">
-                    <i class="bi bi-check-circle me-1"></i> Confirmar
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success px-4" id="btn-confirmar-venta">
+                    <i class="bi bi-check-circle-fill me-1"></i>Confirmar
                 </button>
             </div>
         </div>

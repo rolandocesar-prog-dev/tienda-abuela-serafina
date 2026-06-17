@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.config import settings
+from app.consumer import start_consumer, stop_consumer
 from app.database import init_db
 from app.routes import router
 
@@ -18,10 +19,13 @@ logger = logging.getLogger(settings.service_name)
 async def lifespan(app: FastAPI):
     logger.info("Iniciando servicio %s", settings.service_name)
     await init_db()
-    # TODO(owner-notification): arrancar consumidor de eventos del broker aquí.
-    # Eventos a consumir: SaleCompleted, TransferCompleted, PointsAssigned, PromotionCreated.
+    try:
+        await start_consumer()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("No se pudo arrancar el consumer (%s). Servicio sirve solo GET.", exc)
     logger.info("Servicio %s listo", settings.service_name)
     yield
+    await stop_consumer()
     logger.info("Cerrando servicio %s", settings.service_name)
 
 

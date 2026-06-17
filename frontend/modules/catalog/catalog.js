@@ -396,8 +396,8 @@ let idEditando = null;
         if (productosLista.length === 0) {
             container.innerHTML = `
                 <div class="col-12 text-center py-5">
-                    <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
-                    <p class="mt-3 text-muted">No hay productos que coincidan con los filtros</p>
+                    <i class="bi bi-inbox" style="font-size: 4rem; color: rgba(255,255,255,0.25);"></i>
+                    <p class="mt-3" style="color:rgba(255,255,255,0.5);font-size:0.9rem;">No hay productos que coincidan con los filtros</p>
                     <button class="btn btn-outline-primary" id="limpiar-filtros-btn">
                         <i class="bi bi-eraser"></i> Limpiar filtros
                     </button>
@@ -411,7 +411,7 @@ let idEditando = null;
             return `
                 <div class="col-md-3 col-sm-6" data-producto-id="${producto.id}">
                     <div class="product-card" data-id="${producto.id}">
-                        <div class="product-card-header">
+                        <div class="product-card-header ${getColorClaseCategoria(producto.categoria)}">
                             <div class="product-icon">
                                 ${getIconoCategoria(producto.categoria)}
                             </div>
@@ -512,6 +512,17 @@ let idEditando = null;
             'Panadería': '🍞'
         };
         return iconos[categoria] || '📦';
+    }
+
+    function getColorClaseCategoria(categoria) {
+        const c = (categoria || '').toLowerCase()
+            .normalize('NFD').replace(/[̀-ͯ]/g, '');
+        if (c.includes('lact'))                            return 'cat-lacteos';
+        if (c.includes('beb'))                             return 'cat-bebidas';
+        if (c.includes('carne') || c.includes('embutid')) return 'cat-carnes';
+        if (c.includes('limp')  || c.includes('hogar'))   return 'cat-limpieza';
+        if (c.includes('pan'))                             return 'cat-panaderia';
+        return 'cat-abarrotes';
     }
 
     /**

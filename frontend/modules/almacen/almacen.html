@@ -7,9 +7,14 @@
             </h2>
             <p class="text-muted">Gestión de stock, movimientos y devoluciones</p>
         </div>
-        <button class="btn btn-outline-primary" id="refresh-stock">
-            <i class="bi bi-arrow-repeat me-1"></i>Actualizar
-        </button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-success" id="btn-abrir-transferencia">
+                <i class="bi bi-arrow-left-right me-1"></i>Transferir entre Sucursales
+            </button>
+            <button class="btn btn-outline-primary" id="refresh-stock">
+                <i class="bi bi-arrow-repeat me-1"></i>Actualizar
+            </button>
+        </div>
     </div>
 
     <!-- Tarjetas de estadísticas -->
@@ -177,7 +182,7 @@
 <div class="modal fade" id="modalAjusteStock" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header bg-gradient-primary text-white">
                 <h5 class="modal-title">
                     <i class="bi bi-pencil-square me-2"></i>Ajustar Stock
                 </h5>
@@ -215,6 +220,62 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="btn-confirmar-ajuste">
                     <i class="bi bi-check-circle me-1"></i> Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal transferencia entre sucursales -->
+<div class="modal fade" id="modalTransferencia" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background:linear-gradient(135deg,#2a9d8f,#21867a)">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-arrow-left-right me-2"></i>Transferir entre Sucursales
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Supermercado</label>
+                    <select id="transfer-company" class="form-select">
+                        <option value="">Seleccionar supermercado...</option>
+                    </select>
+                    <small class="text-muted">Solo se pueden transferir entre sucursales del mismo supermercado.</small>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Sucursal Origen</label>
+                        <select id="transfer-origen" class="form-select" disabled>
+                            <option value="">Seleccionar...</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Sucursal Destino</label>
+                        <select id="transfer-destino" class="form-select" disabled>
+                            <option value="">Seleccionar...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Producto</label>
+                    <select id="transfer-producto" class="form-select">
+                        <option value="">Seleccionar producto...</option>
+                    </select>
+                </div>
+                <div id="transfer-stock-info" class="alert alert-info d-none py-2" style="font-size:0.85rem">
+                    <i class="bi bi-box-seam me-1"></i>Stock en origen: <strong id="transfer-stock-actual">-</strong> unidades
+                </div>
+                <div class="mb-1">
+                    <label class="form-label fw-semibold">Cantidad a transferir</label>
+                    <input type="number" id="transfer-cantidad" class="form-control" min="1" placeholder="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success px-4" id="btn-confirmar-transferencia">
+                    <i class="bi bi-check-circle-fill me-1"></i>Transferir
                 </button>
             </div>
         </div>

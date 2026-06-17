@@ -110,6 +110,8 @@ services:
     build: ./services/product
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-product:5432/product
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      JWT_SECRET: ${JWT_SECRET}
     ports: ["8001:8000"]
     depends_on:
       db-product: { condition: service_healthy }
@@ -118,9 +120,13 @@ services:
     build: ./services/inventory
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-inventory:5432/inventory
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      PRODUCT_URL: http://product:8000
+      JWT_SECRET: ${JWT_SECRET}
     ports: ["8002:8000"]
     depends_on:
       db-inventory: { condition: service_healthy }
+      rabbitmq:     { condition: service_healthy }
 
   sales:
     build: ./services/sales
@@ -129,6 +135,8 @@ services:
       PRODUCT_URL: http://product:8000
       INVENTORY_URL: http://inventory:8000
       CUSTOMER_URL: http://customer:8000
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      JWT_SECRET: ${JWT_SECRET}
     ports: ["8003:8000"]
     depends_on:
       db-sales: { condition: service_healthy }
@@ -137,6 +145,8 @@ services:
     build: ./services/customer
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-customer:5432/customer
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      JWT_SECRET: ${JWT_SECRET}
     ports: ["8004:8000"]
     depends_on:
       db-customer: { condition: service_healthy }
@@ -146,9 +156,11 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-notification:5432/notification
       RABBITMQ_URL: ${RABBITMQ_URL}
+      JWT_SECRET: ${JWT_SECRET}
     ports: ["8005:8000"]
     depends_on:
       db-notification: { condition: service_healthy }
+      rabbitmq:        { condition: service_healthy }
 
   auth:
     build: ./services/auth
@@ -163,6 +175,7 @@ services:
     build: ./services/company
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-company:5432/company
+      JWT_SECRET: ${JWT_SECRET}
     ports: ["8007:8000"]
     depends_on:
       db-company: { condition: service_healthy }
@@ -192,15 +205,20 @@ services:
       - gateway
 
   # ---------- Broker (RabbitMQ) ----------
-  # Cuando el owner de Notification lo necesite, descomentar este bloque.
-  # rabbitmq:
-  #   image: rabbitmq:3-management
-  #   ports:
-  #     - "5672:5672"
-  #     - "15672:15672"
-  #   environment:
-  #     RABBITMQ_DEFAULT_USER: guest
-  #     RABBITMQ_DEFAULT_PASS: guest
+  # Management UI: http://localhost:15672 (guest/guest)
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
 
 volumes:
   product-data:

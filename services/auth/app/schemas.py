@@ -1,7 +1,38 @@
-"""
-TODO(owner-auth):
-- UsuarioCreate (username, email, password, rol)
-- UsuarioOut (id, username, email, rol, activo)
-- LoginIn (username, password)
-- TokenOut (access_token, token_type="bearer", expires_in)
-"""
+import uuid
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from app.models import Rol
+
+
+class UsuarioCreate(BaseModel):
+    username: str = Field(min_length=3, max_length=60)
+    email: EmailStr
+    password: str = Field(min_length=6)
+    rol: Rol = Rol.vendedor
+    sucursal_id: uuid.UUID | None = None
+
+
+class UsuarioOut(BaseModel):
+    id: uuid.UUID
+    username: str
+    email: str
+    rol: Rol
+    sucursal_id: uuid.UUID | None
+    activo: bool
+    fecha_creacion: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LoginIn(BaseModel):
+    username: str
+    password: str
+
+
+class TokenOut(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int  # segundos
+    usuario: UsuarioOut

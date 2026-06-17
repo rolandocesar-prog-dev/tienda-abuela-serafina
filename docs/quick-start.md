@@ -1,86 +1,88 @@
-# Quick start para contribuidores
+# Quick start para desarrollo
 
-## Levantar todo localmente
+> Para levantar y usar el sistema completo, ver [README](../README.md) y [demo-guide.md](demo-guide.md).
+> Este archivo cubre tips específicos para iterar sobre el código.
 
-```bash
-cp .env.example .env
-docker compose up --build
-```
+## Trabajar en un solo servicio
 
-Esto levanta 7 microservicios + 7 Postgres + gateway + frontend. La primera vez tarda ~3 minutos compilando imágenes.
-
-Verifica salud:
+En lugar de levantar todo, levantás solo el servicio que estás editando más sus dependencias:
 
 ```bash
-curl http://localhost:8000/catalog/health
-curl http://localhost:8000/almacen/health
-curl http://localhost:8000/ventas/health
-curl http://localhost:8000/compras/health
-curl http://localhost:8000/pagos/health
-curl http://localhost:8000/facturacion/health
-curl http://localhost:8000/rrhh/health
+# Ejemplo: trabajar en inventory
+docker compose up --build inventory db-inventory rabbitmq
 ```
 
-## Trabajar en UN solo servicio (recomendado)
+Servicios y sus dependencias directas:
 
-Cuando estés implementando tu servicio:
+| Servicio | Dependencias al levantar |
+|---|---|
+| auth | db-auth |
+| product | db-product, rabbitmq |
+| inventory | db-inventory, rabbitmq |
+| sales | db-sales, rabbitmq |
+| customer | db-customer, rabbitmq |
+| notification | db-notification, rabbitmq |
+| company | db-company |
 
-```bash
-docker compose up --build <tu-servicio> db-<tu-servicio>
-```
+## Hot reload durante desarrollo
 
-Por ejemplo, si te toca `ventas`:
-
-```bash
-docker compose up --build ventas db-ventas catalog almacen pagos facturacion
-```
-
-(Levanta también sus dependencias porque ventas orquesta.)
-
-Para iterar más rápido, monta tu código en el contenedor agregando al `docker-compose.yml` bajo tu servicio:
+Agregar esto al servicio en `docker-compose.yml` para no reconstruir la imagen en cada cambio:
 
 ```yaml
     volumes:
-      - ./services/ventas/app:/app/app
+      - ./services/inventory/app:/app/app
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 ```
 
-No commitees esa modificación — es solo para desarrollo local.
+No commitear esa modificación — es solo para desarrollo local.
 
-## Reglas de oro
+## Probar endpoints directamente
 
-1. **No tocar los `schemas.py` ajenos sin avisar al equipo.** Son contratos.
-   Si necesitas cambiar uno, abre un mensaje en el grupo y actualiza también
-   [docs/api-contracts.md](api-contracts.md).
-2. **No importes de otros servicios.** Si necesitas hablar con otro, es vía HTTP por `clients.py`.
-3. **Sigue Conventional Commits**: `feat(ventas):`, `fix(almacen):`, `docs:`, `chore:`.
-4. **Cada PR debe levantar limpio con `docker compose up --build`.**
-5. Si tu endpoint llama a otro servicio y ese otro falla, usa los códigos:
-   - `404` → recurso no existe (el que YO debía encontrar)
-   - `409` → conflicto (stock insuficiente)
-   - `422` → input inválido / recurso referenciado no existe en otro servicio
-   - `502` → dependencia respondió mal
-   - `503` → dependencia no responde
+Cada servicio expone Swagger en su puerto host:
 
-## Probar endpoints
+- auth → http://localhost:8006/docs
+- product → http://localhost:8001/docs
+- inventory → http://localhost:8002/docs
+- sales → http://localhost:8003/docs
+- customer → http://localhost:8004/docs
+- notification → http://localhost:8005/docs
+- company → http://localhost:8007/docs
 
-Cada servicio expone Swagger automático:
-
-- catalog → http://localhost:8001/docs
-- almacen → http://localhost:8002/docs
-- ventas → http://localhost:8003/docs
-- compras → http://localhost:8004/docs
-- pagos → http://localhost:8005/docs
-- facturacion → http://localhost:8006/docs
-- rrhh → http://localhost:8007/docs
-
-## Reset de base de datos
-
-Si tu BD local quedó en estado raro:
+También por el gateway (requiere JWT en el header `Authorization: Bearer <token>`):
 
 ```bash
-docker compose down -v
-docker compose up --build
+# Obtener token
+TOKEN=$(curl -s -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}' | python -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+# Usar el token
+curl http://localhost:8000/products -H "Authorization: Bearer $TOKEN"
 ```
 
-`-v` borra los volúmenes — empezás de cero.
+## Convenciones de commit
+
+```
+feat(inventory): agregar endpoint de transferencia
+fix(sales): corregir cálculo de total con descuento
+docs: actualizar arquitectura
+chore: bump dependencies
+```
+
+## Códigos de error entre servicios
+
+| Código | Cuándo usarlo |
+|---|---|
+| `404` | El recurso que YO debía encontrar no existe |
+| `409` | Conflicto de negocio (stock insuficiente, duplicado) |
+| `422` | Input inválido o referencia a recurso inexistente en otro servicio |
+| `502` | Dependencia respondió con error |
+| `503` | Dependencia no responde (timeout, connection refused) |
+
+## Reset de BD
+
+```bash
+docker compose down -v && docker compose up --build -d
+```
+
+El seed es idempotente: re-crea los 3 supermercados, 9 sucursales, 25 productos y los 10 usuarios automáticamente.
