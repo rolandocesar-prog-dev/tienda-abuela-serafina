@@ -13,8 +13,13 @@ class ProductoBase(BaseModel):
     precio_base: Decimal = Field(..., ge=0)
 
 
-class ProductoCreate(ProductoBase):
-    pass
+class ProductoCreate(BaseModel):
+    codigo: str | None = Field(None, max_length=50, description="Opcional — se autogenera por categoría si se omite")
+    nombre: str = Field(..., max_length=200)
+    descripcion: str | None = Field(None, max_length=500)
+    categoria: str = Field(..., max_length=100)
+    unidad_medida: str = Field(..., max_length=20)
+    precio_base: Decimal = Field(..., ge=0)
 
 
 class ProductoUpdate(BaseModel):

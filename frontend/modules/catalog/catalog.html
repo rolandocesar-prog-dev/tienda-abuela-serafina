@@ -116,8 +116,9 @@
                     <input type="hidden" id="producto-id">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Código (SKU) *</label>
-                            <input type="text" id="prod-codigo" class="form-control" placeholder="Ej: PROD-001" required>
+                            <label class="form-label">Código (SKU)</label>
+                            <input type="text" id="prod-codigo" class="form-control" placeholder="Se generará automáticamente" readonly>
+                            <small class="text-muted" id="prod-codigo-hint">Se genera por categoría (ej: LAC006, CAR007)</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Nombre *</label>

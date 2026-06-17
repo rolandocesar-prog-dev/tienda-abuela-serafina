@@ -1,3 +1,5 @@
+import re
+import unicodedata
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -13,10 +15,52 @@ from app.security import verify_jwt
 
 router = APIRouter(prefix="/products", tags=["productos"], dependencies=[Depends(verify_jwt)])
 
+# Prefijos canónicos por categoría — alineados con los seeds existentes (LAC, CAR, etc.)
+PREFIJOS_CATEGORIA = {
+    "lacteos": "LAC",
+    "carnes y embutidos": "CAR",
+    "carnes": "CAR",
+    "abarrotes": "ABA",
+    "bebidas": "BEB",
+    "limpieza": "LIM",
+    "higiene": "HIG",
+    "panaderia": "PAN",
+    "panaderia y reposteria": "PAN",
+}
+
+
+def _prefijo_categoria(categoria: str) -> str:
+    """3 letras canónicas para una categoría. Sin acentos, mayúsculas."""
+    sin_acentos = "".join(
+        c for c in unicodedata.normalize("NFD", categoria.lower())
+        if unicodedata.category(c) != "Mn"
+    )
+    if sin_acentos in PREFIJOS_CATEGORIA:
+        return PREFIJOS_CATEGORIA[sin_acentos]
+    # Fallback: 3 primeras letras alfabéticas
+    letras = re.sub(r"[^a-z]", "", sin_acentos)[:3].upper()
+    return letras.ljust(3, "X") if letras else "GEN"
+
+
+async def _siguiente_codigo(db: AsyncSession, categoria: str) -> str:
+    """Genera el siguiente código correlativo para la categoría: PREFIJO + 3 dígitos."""
+    prefijo = _prefijo_categoria(categoria)
+    stmt = select(Producto.codigo).where(Producto.codigo.like(f"{prefijo}%"))
+    codigos = [c for (c,) in (await db.execute(stmt)).all()]
+    max_num = 0
+    for codigo in codigos:
+        m = re.match(rf"^{prefijo}(\d+)$", codigo)
+        if m:
+            max_num = max(max_num, int(m.group(1)))
+    return f"{prefijo}{max_num + 1:03d}"
+
 
 @router.post("", response_model=ProductoOut, status_code=status.HTTP_201_CREATED)
 async def crear_producto(payload: ProductoCreate, db: AsyncSession = Depends(get_db)) -> Producto:
-    producto = Producto(**payload.model_dump())
+    datos = payload.model_dump()
+    if not datos.get("codigo"):
+        datos["codigo"] = await _siguiente_codigo(db, datos["categoria"])
+    producto = Producto(**datos)
     db.add(producto)
     try:
         await db.commit()
@@ -24,7 +68,7 @@ async def crear_producto(payload: ProductoCreate, db: AsyncSession = Depends(get
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Ya existe un producto con código '{payload.codigo}'",
+            detail=f"Ya existe un producto con código '{datos['codigo']}'",
         )
     await db.refresh(producto)
     await emit_product_created(
