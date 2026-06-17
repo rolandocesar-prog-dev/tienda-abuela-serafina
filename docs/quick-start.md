@@ -85,4 +85,36 @@ chore: bump dependencies
 docker compose down -v && docker compose up --build -d
 ```
 
-El seed es idempotente: re-crea los 3 supermercados, 9 sucursales, 25 productos y los 10 usuarios automáticamente.
+El seed es idempotente: re-crea los 3 supermercados, 9 sucursales, 25 productos, 10 usuarios (admin + 9 vendedores) y 50 clientes automáticamente al levantar.
+
+## Cambios al schema → rebuild
+
+`init_db` usa `Base.metadata.create_all` (no Alembic). **NO** añade columnas a tablas existentes. Si modificás un modelo (ej. agregás un campo a `Venta`):
+
+```bash
+docker compose down -v && docker compose up --build -d
+```
+
+Sin el `-v` la columna nueva nunca aparece en la BD existente.
+
+## Trabajar en el frontend sin rebuild
+
+Los archivos del frontend están montados como volumen, no como build. Para ver cambios:
+- HTML/CSS/JS estático: **Ctrl+Shift+R** en el browser
+- Si el cambio no aparece: `docker compose restart frontend` (limpia cache de nginx)
+
+## SKU autogenerado en productos
+
+`POST /products` permite omitir `codigo`. El backend genera el siguiente correlativo usando un mapa de prefijos por categoría:
+
+| Categoría | Prefijo |
+|---|---|
+| Lácteos | LAC |
+| Carnes y Embutidos | CAR |
+| Abarrotes | ABA |
+| Bebidas | BEB |
+| Limpieza | LIM |
+| Higiene | HIG |
+| Panadería | PAN |
+
+Para categorías nuevas el fallback son las primeras 3 letras normalizadas (sin acentos, mayúsculas).

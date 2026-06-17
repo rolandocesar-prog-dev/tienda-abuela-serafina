@@ -41,6 +41,19 @@ Frontend disponible en **http://localhost:3000**
 
 ---
 
+## Datos seed (al levantar)
+
+| Recurso | Cantidad | Detalle |
+|---------|----------|---------|
+| Supermercados | 3 | La Canasta, El Sol, Don Pedro |
+| Sucursales | 9 | 3 por supermercado, distribuidas en CBBA / LP / SCZ |
+| Productos | 25 | 5 categorías (Lácteos, Carnes, Abarrotes, Bebidas, Limpieza), con SKU `LAC001`…`BEB005` |
+| Stock inicial | 225 filas | 25 productos × 9 sucursales |
+| Usuarios | 10 | 1 admin + 9 vendedores (uno por sucursal) |
+| Clientes | 50 | Personas físicas (CI) + empresas (NIT) bolivianas para autocompletado en ventas |
+
+> El seed es idempotente — si los IDs canónicos ya existen no inserta duplicados.
+
 ## Stack
 
 Python 3.12 · FastAPI · SQLAlchemy 2.0 async · PostgreSQL 16 · Docker Compose · Nginx · RabbitMQ · JWT
