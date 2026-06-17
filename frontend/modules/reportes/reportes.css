@@ -103,3 +103,39 @@
 .badge-rank.top1 { background: #ffd700; color: #7a5c00; }
 .badge-rank.top2 { background: #c0c0c0; color: #555; }
 .badge-rank.top3 { background: #cd7f32; color: #fff; }
+
+/* Estilos para inventario */
+#section-inventario .progress {
+    background-color: #e9ecef;
+    border-radius: 10px;
+}
+
+#section-inventario .progress-bar {
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+#section-inventario .badge {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.65rem;
+}
+
+#section-inventario .p-3.bg-light {
+    border: 1px solid var(--cream-dark);
+    transition: all 0.2s ease;
+}
+
+#section-inventario .p-3.bg-light:hover {
+    border-color: #2a9d8f;
+    background: #f8f9fa !important;
+}
+
+/* Animación para la barra de progreso */
+@keyframes progressAnim {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+.progress-bar {
+    animation: progressAnim 1s ease-out;
+}
