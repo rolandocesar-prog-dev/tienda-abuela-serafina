@@ -40,6 +40,7 @@ class VentaOut(BaseModel):
     subtotal: Decimal
     total: Decimal
     estado: EstadoVenta
+    metodo_pago: str
     factura_id: uuid.UUID | None
     pago_id: uuid.UUID | None
     items: list[VentaItemOut] = []

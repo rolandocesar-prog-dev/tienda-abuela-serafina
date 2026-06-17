@@ -40,6 +40,7 @@ class Venta(Base):
     estado: Mapped[EstadoVenta] = mapped_column(
         Enum(EstadoVenta, name="estado_venta"), nullable=False, default=EstadoVenta.pendiente
     )
+    metodo_pago: Mapped[str] = mapped_column(String(20), nullable=False, default="efectivo")
     factura_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     pago_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
 

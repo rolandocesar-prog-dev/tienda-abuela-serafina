@@ -83,6 +83,7 @@ async def crear_venta(
         agencia_id=payload.agencia_id,
         cliente_nombre=payload.cliente_nombre,
         cliente_documento=payload.cliente_documento,
+        metodo_pago=payload.metodo_pago,
         subtotal=subtotal,
         total=total,
     )
