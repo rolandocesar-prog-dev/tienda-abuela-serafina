@@ -211,7 +211,7 @@
         if (!tbody) return;
         
         if (carritoVentas.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay productos en el carrito</div></td>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4" style="color:rgba(255,255,255,0.4)">No hay productos en el carrito</td></tr>';
             if (totalItems) totalItems.textContent = '0 items';
             if (totalVenta) totalVenta.textContent = 'Bs 0.00';
             return;
@@ -226,23 +226,23 @@
             itemCount += item.cantidad;
             
             return `
-                <tr>
-                    <td class="fw-bold">${escapeHtmlVentas(item.producto_nombre)}</div>
-                    <td>
+                <tr style="background:transparent !important">
+                    <td class="fw-bold" style="color:#fff !important;background:transparent !important">${escapeHtmlVentas(item.producto_nombre)}</td>
+                    <td style="color:#fff !important;background:transparent !important">
                         <div class="d-flex align-items-center gap-2">
-                            <button class="btn btn-sm btn-outline-secondary btn-icon" onclick="cambiarCantidadVentas(${index}, -1)">-</button>
-                            <span class="fw-bold" style="min-width: 40px; text-align: center;">${item.cantidad}</span>
-                            <button class="btn btn-sm btn-outline-secondary btn-icon" onclick="cambiarCantidadVentas(${index}, 1)">+</button>
+                            <button class="btn btn-sm btn-outline-light btn-icon" onclick="cambiarCantidadVentas(${index}, -1)">-</button>
+                            <span class="fw-bold" style="min-width:40px;text-align:center;color:#fff">${item.cantidad}</span>
+                            <button class="btn btn-sm btn-outline-light btn-icon" onclick="cambiarCantidadVentas(${index}, 1)">+</button>
                         </div>
-                    </div>
-                    <td>Bs ${item.precio_unitario.toFixed(2)}</div>
-                    <td class="text-primary fw-bold">Bs ${subtotal.toFixed(2)}</div>
-                    <td>
+                    </td>
+                    <td style="color:rgba(255,255,255,0.85) !important;background:transparent !important">Bs ${item.precio_unitario.toFixed(2)}</td>
+                    <td class="fw-bold" style="color:var(--amber) !important;background:transparent !important">Bs ${subtotal.toFixed(2)}</td>
+                    <td style="background:transparent !important">
                         <button class="btn btn-sm btn-outline-danger btn-icon" onclick="eliminarDelCarritoVentas(${index})">
                             <i class="bi bi-trash"></i>
                         </button>
-                    </div>
-                 </div>
+                    </td>
+                </tr>
             `;
         }).join('');
         

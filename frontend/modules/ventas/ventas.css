@@ -16,8 +16,7 @@
 .table-ventas tbody td { padding: 0.6rem 0.9rem; }
 .table-ventas thead th { padding: 0.6rem 0.9rem; }
 
-/* Carrito vacío */
-#carrito-body tr:only-child td { background: #fdfcfa; }
+/* Carrito vacío — sin override de fondo (heredan el dark del panel) */
 
 @media (max-width: 768px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.65rem; }
